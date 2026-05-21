@@ -2285,9 +2285,13 @@ function syncOneSchedule(id) {
   evs[dt].push({ text: row.name, cls, _schedId: id });
   Object.keys(evs).forEach(k => { if (!evs[k].length) delete evs[k]; });
   saveCalEventsData(evs);
+  // 해당 월로 캘린더 이동
+  const [y, m] = dt.split('-').map(Number);
+  calYear = y; calMonth = m;
   renderCalendar();
-  // 버튼 상태 업데이트
   renderSchedule();
+  // 캘린더 섹션으로 스크롤
+  document.getElementById('t50-calendar')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ─────────────────────────────────────
