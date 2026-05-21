@@ -717,10 +717,8 @@ create policy "Allow all" on app_data
   <section class="section" id="t50-schedule">
     <div class="sec-hd"><div class="sec-ico"><i data-lucide="table-2"></i></div><h2 class="sec-ttl">교육 일정 요약</h2></div>
     <div id="scheduleContainer"></div>
-    <div class="mt-3" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <div class="mt-3">
       <button class="btn btn-pri btn-sm" onclick="openEditSchedule(null)">+ 일정 추가</button>
-      <button class="btn btn-ghost btn-sm" onclick="syncScheduleToCalendar();renderCalendar();showSyncToast()">📅 캘린더에 올리기</button>
-      <span id="syncToast" style="font-size:11px;color:#22C55E;opacity:0;transition:opacity .3s"></span>
     </div>
     <div class="card mt-4" style="background:#FFFBEB;border-color:#FDE68A">
       <b style="font-size:12px;color:#92400E">📍 컨택센터 방문 안내</b>
@@ -1449,7 +1447,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   await initFromSupabase();   // Supabase에서 모든 데이터 로드
   const launchEl = document.getElementById('launchDateInput');
   if (launchEl) launchEl.value = getLaunchDate();
-  syncScheduleToCalendar();    // 스케줄 → 캘린더 초기 동기화
   renderCalendar();
   renderChecklist();
   loadFromStorage();           // renderGoals, renderSchedule, 등 모두 호출
@@ -2184,7 +2181,7 @@ const SCHEDULE_DEFAULT = [
   {id:'s4',typeCls:'tg-bl',typeName:'컨택센터',name:'컨택센터 상담인원 교육',date:'2026년 9월 19일 (금)',time:'17:40 ~ 19:10',duration:'1.5h',location:'경기도 성남시 수정구 산성대로 223, 9층 ICS',instructors:'이윤주 · 고태진 · 정규식',attendees:'서비스 7명 · 구매상담 3명 (총 10명)'}
 ];
 function getSchedule() { return dbGet('schedule') || JSON.parse(JSON.stringify(SCHEDULE_DEFAULT)); }
-function saveScheduleData(r) { dbSet('schedule', r); syncScheduleToCalendar(); renderCalendar(); }
+function saveScheduleData(r) { dbSet('schedule', r); }
 let _schedDragIdx = null;
 function schedDragStart(e, i) { _schedDragIdx = i; setTimeout(() => e.target.closest('tr').style.opacity = '.35', 0); e.dataTransfer.effectAllowed = 'move'; }
 function schedDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; document.querySelectorAll('#scheduleContainer tbody tr').forEach(r => r.classList.remove('drag-over')); e.target.closest('tr')?.classList.add('drag-over'); }
@@ -2195,11 +2192,17 @@ function renderSchedule() {
   const rows=getSchedule(), el=document.getElementById('scheduleContainer');
   if (!el) return;
   if (!rows.length) { el.innerHTML='<div class="empty-state">일정을 추가해주세요.</div>'; return; }
+  const evs = getCalEvents();
+  const calIds = new Set(Object.values(evs).flat().filter(e=>e._schedId).map(e=>e._schedId));
   el.innerHTML=`<div class="tbl-wrap"><table>
     <thead><tr><th style="width:28px"></th><th>교육명</th><th>일정</th><th>시간</th><th>장소</th><th>교육 담당</th><th>대상/인원</th><th></th></tr></thead>
     <tbody>${rows.map((r,i)=>{
       const types = r.types || [{cls: r.typeCls||'tg-gy', name: r.typeName||'-'}];
       const tagsHTML = types.map(t=>`<span class="tag ${t.cls}">${t.name}</span>`).join(' ');
+      const inCal = calIds.has(r.id);
+      const calBtn = inCal
+        ? `<button class="btn-icon" style="margin-right:3px;color:#22C55E;font-size:10px;padding:3px 6px;border:1px solid #BBF7D0;border-radius:4px;background:#F0FDF4;cursor:pointer;white-space:nowrap" onclick="syncOneSchedule('${r.id}')" title="캘린더 업데이트">✓ 반영됨</button>`
+        : `<button class="btn-icon" style="margin-right:3px;font-size:10px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;white-space:nowrap;color:var(--muted)" onclick="syncOneSchedule('${r.id}')" title="캘린더에 올리기">📅 올리기</button>`;
       return `<tr draggable="true" ondragstart="schedDragStart(event,${i})" ondragover="schedDragOver(event)" ondrop="schedDrop(event,${i})" ondragend="schedDragEnd(event)" style="cursor:default">
         <td style="padding:8px 4px;text-align:center"><span class="drag-handle" title="드래그로 순서 변경">⠿</span></td>
         <td>${tagsHTML}<br><b style="display:block;margin-top:4px">${r.name}</b></td>
@@ -2207,6 +2210,7 @@ function renderSchedule() {
         <td>${r.time}<br><span class="text-muted text-sm">${r.duration}</span></td>
         <td>${r.location}</td><td>${r.instructors}</td><td>${r.attendees}</td>
         <td style="white-space:nowrap;padding:8px">
+          ${calBtn}
           <button class="btn-icon btn-edit-ic" style="margin-right:3px" onclick="openEditSchedule('${r.id}')" title="수정"><i data-lucide="pencil"></i></button>
           <button class="btn-icon btn-del-ic" onclick="removeScheduleRow('${r.id}')" title="삭제"><i data-lucide="trash-2"></i></button>
         </td></tr>`;
@@ -2244,6 +2248,27 @@ function saveScheduleEdit() {
   saveScheduleData(rows);renderSchedule();closeModal('modal-add-schedule');
 }
 function removeScheduleRow(id){if(!confirm('일정을 삭제하시겠습니까?'))return;saveScheduleData(getSchedule().filter(r=>r.id!==id));renderSchedule();}
+
+function syncOneSchedule(id) {
+  const rows = getSchedule();
+  const row = rows.find(r => r.id === id);
+  if (!row) return;
+  const dt = parseScheduleDate(row.date);
+  if (!dt) { alert('날짜 형식을 확인해주세요.\n예: 2026년 5월 26일 (화)'); return; }
+  const evs = getCalEvents();
+  // 이 항목 기존 캘린더 이벤트 제거
+  Object.keys(evs).forEach(k => { evs[k] = evs[k].filter(e => e._schedId !== id); });
+  // 새로 추가
+  const types = row.types || [{cls: row.typeCls||'tg-gy'}];
+  const cls = SCHED_TO_CAL[types[0]?.cls] || 'ev-ms';
+  if (!evs[dt]) evs[dt] = [];
+  evs[dt].push({ text: row.name, cls, _schedId: id });
+  Object.keys(evs).forEach(k => { if (!evs[k].length) delete evs[k]; });
+  saveCalEventsData(evs);
+  renderCalendar();
+  // 버튼 상태 업데이트
+  renderSchedule();
+}
 
 // ─────────────────────────────────────
 // CURRICULUM
