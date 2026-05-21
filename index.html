@@ -286,7 +286,7 @@ tr.drag-over td{background:var(--pri-l)!important;outline:2px dashed var(--pri)}
     <button class="nav-tab-add" onclick="openModal('modal-add-product')">+ 제품 추가</button>
   </div>
   <span id="dbStatus" style="font-size:11px;margin-left:8px;transition:color .3s"></span>
-  <span class="nav-version">v2.0 · 2025.10.01</span>
+  <span class="nav-version" id="navVersion">v2.0</span>
 </nav>
 
 <!-- DB 설정 안내 오버레이 -->
@@ -1282,6 +1282,10 @@ function dbSet(key, value) {
       console.error('dbSet error:', r.status, body);
       throw new Error(r.status);
     }
+    updateNavVersion();
+    const now2 = new Date();
+    const ds = `${now2.getFullYear()}.${String(now2.getMonth()+1).padStart(2,'0')}.${String(now2.getDate()).padStart(2,'0')}`;
+    if (key !== 'last_updated') { _db['last_updated'] = ds; fetch(`${SUPABASE_URL}/rest/v1/app_data?on_conflict=product_id,data_key`,{method:'POST',headers:{..._dbH,Prefer:'resolution=merge-duplicates'},body:JSON.stringify({product_id:PRODUCT_ID,data_key:'last_updated',data_value:ds})}); }
   })
     .catch(e => { showDbStatus('error'); })
     .finally(() => { _dbSavingCount--; if (_dbSavingCount === 0) showDbStatus('ok'); });
@@ -1291,6 +1295,13 @@ function showSyncToast() {
   const el = document.getElementById('syncToast'); if (!el) return;
   el.textContent = '✓ 캘린더에 반영됐어요'; el.style.opacity = '1';
   setTimeout(() => { el.style.opacity = '0'; }, 2000);
+}
+
+function updateNavVersion() {
+  const el = document.getElementById('navVersion'); if (!el) return;
+  const now = new Date();
+  const d = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
+  el.textContent = `v2.0 · ${d} 업데이트`;
 }
 
 function showDbStatus(state) {
@@ -1447,6 +1458,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   await initFromSupabase();   // Supabase에서 모든 데이터 로드
   const launchEl = document.getElementById('launchDateInput');
   if (launchEl) launchEl.value = getLaunchDate();
+  const lastUpdate = dbGet('last_updated');
+  if (lastUpdate) { const el = document.getElementById('navVersion'); if (el) el.textContent = `v2.0 · ${lastUpdate} 업데이트`; }
   renderCalendar();
   renderChecklist();
   loadFromStorage();           // renderGoals, renderSchedule, 등 모두 호출
