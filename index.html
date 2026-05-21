@@ -717,8 +717,10 @@ create policy "Allow all" on app_data
   <section class="section" id="t50-schedule">
     <div class="sec-hd"><div class="sec-ico"><i data-lucide="table-2"></i></div><h2 class="sec-ttl">교육 일정 요약</h2></div>
     <div id="scheduleContainer"></div>
-    <div class="mt-3">
+    <div class="mt-3" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <button class="btn btn-pri btn-sm" onclick="openEditSchedule(null)">+ 일정 추가</button>
+      <button class="btn btn-ghost btn-sm" onclick="syncScheduleToCalendar();renderCalendar();showSyncToast()">📅 캘린더에 올리기</button>
+      <span id="syncToast" style="font-size:11px;color:#22C55E;opacity:0;transition:opacity .3s"></span>
     </div>
     <div class="card mt-4" style="background:#FFFBEB;border-color:#FDE68A">
       <b style="font-size:12px;color:#92400E">📍 컨택센터 방문 안내</b>
@@ -1285,6 +1287,12 @@ function dbSet(key, value) {
   })
     .catch(e => { showDbStatus('error'); })
     .finally(() => { _dbSavingCount--; if (_dbSavingCount === 0) showDbStatus('ok'); });
+}
+
+function showSyncToast() {
+  const el = document.getElementById('syncToast'); if (!el) return;
+  el.textContent = '✓ 캘린더에 반영됐어요'; el.style.opacity = '1';
+  setTimeout(() => { el.style.opacity = '0'; }, 2000);
 }
 
 function showDbStatus(state) {
