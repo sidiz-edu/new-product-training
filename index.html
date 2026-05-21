@@ -710,18 +710,6 @@ create policy "Allow all" on app_data
         <button class="btn btn-ghost btn-sm" onclick="calNavToday()">오늘로</button>
       </div>
       <div class="cal-months" id="calendarContainer"></div>
-      <div class="card" style="padding:0;overflow:hidden">
-        <div style="padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--muted)">범례</div>
-        <div class="cal-legend">
-          <div class="leg-i"><div class="leg-d" style="background:#DBEAFE"></div> 마일스톤</div>
-          <div class="leg-i"><div class="leg-d" style="background:#D1FAE5"></div> 시공팀 교육</div>
-          <div class="leg-i"><div class="leg-d" style="background:#FEF3C7"></div> 매장 교육</div>
-          <div class="leg-i"><div class="leg-d" style="background:#E0E7FF"></div> 컨택센터/AS 교육</div>
-          <div class="leg-i"><div class="leg-d" style="background:#FCE7F3"></div> 내부 행사</div>
-          <div class="leg-i"><div class="leg-d" style="background:#FEE2E2"></div> 제품 출시</div>
-          <div class="leg-i"><div class="leg-d" style="background:#F3F4F6"></div> 공휴일/선거</div>
-        </div>
-      </div>
     </div>
   </section>
 
@@ -1021,7 +1009,11 @@ create policy "Allow all" on app_data
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">날짜</label>
-        <input type="text" id="cal-date-display" readonly style="background:var(--bg);color:var(--muted)">
+        <input type="date" id="cal-date-display" style="font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)">
+      </div>
+      <div class="form-group" id="cal-sched-info" style="display:none;align-items:center">
+        <label class="form-label">연결 일정</label>
+        <span id="cal-sched-label" style="font-size:12px;color:var(--muted);padding:6px 0"></span>
       </div>
     </div>
     <div class="form-row">
@@ -1449,6 +1441,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await initFromSupabase();   // Supabase에서 모든 데이터 로드
   const launchEl = document.getElementById('launchDateInput');
   if (launchEl) launchEl.value = getLaunchDate();
+  syncScheduleToCalendar();    // 스케줄 → 캘린더 초기 동기화
   renderCalendar();
   renderChecklist();
   loadFromStorage();           // renderGoals, renderSchedule, 등 모두 호출
@@ -1521,6 +1514,41 @@ function switchTab(group, id) {
 // ─────────────────────────────────────
 function getCalEvents() { return dbGet('cal_events') || JSON.parse(JSON.stringify(CAL_EVENTS)); }
 function saveCalEventsData(evs) { dbSet('cal_events', evs); }
+
+// 스케줄 타입 → 캘린더 색상 매핑
+const SCHED_TO_CAL = { 'tg-yw':'ev-sh','tg-gn':'ev-st','tg-pp':'ev-cc','tg-bl':'ev-cc','tg-pk':'ev-mt' };
+
+function parseScheduleDate(str) {
+  const m = (str||'').match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+  return m ? `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}` : null;
+}
+function formatDateToKorean(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const days = ['일','월','화','수','목','금','토'];
+  return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
+}
+
+let _syncingCal = false;
+function syncScheduleToCalendar() {
+  if (_syncingCal) return;
+  _syncingCal = true;
+  const rows = getSchedule();
+  const evs = getCalEvents();
+  // 기존 스케줄 연결 이벤트 제거
+  Object.keys(evs).forEach(dt => { evs[dt] = evs[dt].filter(e => !e._schedId); });
+  // 스케줄 항목 → 캘린더 이벤트 추가
+  rows.forEach(row => {
+    const dt = parseScheduleDate(row.date);
+    if (!dt) return;
+    const types = row.types || [{cls: row.typeCls}];
+    const cls = SCHED_TO_CAL[types[0]?.cls] || 'ev-ms';
+    if (!evs[dt]) evs[dt] = [];
+    evs[dt].push({ text: row.name, cls, _schedId: row.id });
+  });
+  Object.keys(evs).forEach(k => { if (!evs[k].length) delete evs[k]; });
+  saveCalEventsData(evs);
+  _syncingCal = false;
+}
 function getLaunchDate() { return dbGet('launch_date') || ''; }
 function saveLaunchDate(val) {
   dbSet('launch_date', val);
@@ -1618,6 +1646,7 @@ function openAddCalEvent(dateStr) {
   document.getElementById('cal-event-type').value = 'ev-ms';
   document.getElementById('cal-event-holiday').value = '';
   document.getElementById('cal-delete-btn').style.display = 'none';
+  document.getElementById('cal-sched-info').style.display = 'none';
   openModal('modal-cal-event');
 }
 
@@ -1632,21 +1661,56 @@ function openEditCalEvent(dateStr, idx) {
   document.getElementById('cal-event-type').value = ev.cls || 'ev-ms';
   document.getElementById('cal-event-holiday').value = ev.holiday ? 'true' : '';
   document.getElementById('cal-delete-btn').style.display = 'inline-flex';
+  // 스케줄 연결 표시
+  const schedInfo = document.getElementById('cal-sched-info');
+  if (ev._schedId) {
+    schedInfo.style.display = 'flex';
+    document.getElementById('cal-sched-label').textContent = '📋 교육 일정 요약 연동 (날짜 변경 시 자동 반영)';
+    document.getElementById('cal-event-type').disabled = true;
+  } else {
+    schedInfo.style.display = 'none';
+    document.getElementById('cal-event-type').disabled = false;
+  }
   openModal('modal-cal-event');
 }
 
 function saveCalEvent() {
   const text = document.getElementById('cal-event-text').value.trim();
   if (!text) { alert('일정 내용을 입력해주세요.'); return; }
+  const newDate = document.getElementById('cal-date-display').value || calEditingDate;
   const evs = getCalEvents();
-  if (!evs[calEditingDate]) evs[calEditingDate] = [];
   const obj = {
     text,
     cls: document.getElementById('cal-event-type').value,
     ...(document.getElementById('cal-event-holiday').value ? { holiday: true } : {})
   };
-  if (calEditingIdx !== null) evs[calEditingDate][calEditingIdx] = obj;
-  else evs[calEditingDate].push(obj);
+
+  if (calEditingIdx !== null) {
+    const oldObj = (evs[calEditingDate] || [])[calEditingIdx] || {};
+    if (oldObj._schedId) obj._schedId = oldObj._schedId;
+    // 날짜 변경 처리
+    if (newDate !== calEditingDate) {
+      evs[calEditingDate].splice(calEditingIdx, 1);
+      if (!evs[calEditingDate].length) delete evs[calEditingDate];
+      if (!evs[newDate]) evs[newDate] = [];
+      evs[newDate].push(obj);
+      // 스케줄 역방향 동기화
+      if (obj._schedId) {
+        _syncingCal = true;
+        const rows = getSchedule();
+        const row = rows.find(r => r.id === obj._schedId);
+        if (row) { row.date = formatDateToKorean(newDate); dbSet('schedule', rows); renderSchedule(); }
+        _syncingCal = false;
+      }
+    } else {
+      if (!evs[calEditingDate]) evs[calEditingDate] = [];
+      evs[calEditingDate][calEditingIdx] = obj;
+    }
+  } else {
+    if (!evs[newDate]) evs[newDate] = [];
+    evs[newDate].push(obj);
+  }
+  document.getElementById('cal-event-type').disabled = false;
   saveCalEventsData(evs); renderCalendar(); closeModal('modal-cal-event');
 }
 
@@ -2112,7 +2176,7 @@ const SCHEDULE_DEFAULT = [
   {id:'s4',typeCls:'tg-bl',typeName:'컨택센터',name:'컨택센터 상담인원 교육',date:'2026년 9월 19일 (금)',time:'17:40 ~ 19:10',duration:'1.5h',location:'경기도 성남시 수정구 산성대로 223, 9층 ICS',instructors:'이윤주 · 고태진 · 정규식',attendees:'서비스 7명 · 구매상담 3명 (총 10명)'}
 ];
 function getSchedule() { return dbGet('schedule') || JSON.parse(JSON.stringify(SCHEDULE_DEFAULT)); }
-function saveScheduleData(r) { dbSet('schedule', r); }
+function saveScheduleData(r) { dbSet('schedule', r); syncScheduleToCalendar(); renderCalendar(); }
 let _schedDragIdx = null;
 function schedDragStart(e, i) { _schedDragIdx = i; setTimeout(() => e.target.closest('tr').style.opacity = '.35', 0); e.dataTransfer.effectAllowed = 'move'; }
 function schedDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; document.querySelectorAll('#scheduleContainer tbody tr').forEach(r => r.classList.remove('drag-over')); e.target.closest('tr')?.classList.add('drag-over'); }
