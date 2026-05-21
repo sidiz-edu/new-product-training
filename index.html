@@ -1281,8 +1281,14 @@ function dbSet(key, value) {
     method: 'POST',
     headers: { ..._dbH, Prefer: 'resolution=merge-duplicates' },
     body: JSON.stringify({ product_id: PRODUCT_ID, data_key: key, data_value: value, updated_at: new Date().toISOString() })
-  }).then(r => { if (!r.ok) throw new Error(r.status); })
-    .catch(e => { console.error('dbSet error:', e); showDbStatus('error'); })
+  }).then(async r => {
+    if (!r.ok) {
+      const body = await r.json().catch(() => ({}));
+      console.error('dbSet error:', r.status, body);
+      throw new Error(r.status);
+    }
+  })
+    .catch(e => { showDbStatus('error'); })
     .finally(() => { _dbSavingCount--; if (_dbSavingCount === 0) showDbStatus('ok'); });
 }
 
