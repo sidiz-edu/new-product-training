@@ -1,0 +1,1947 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>시디즈 제품 출시 교육 관리</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@latest/dist/web/dynamic/pretendard-dynamic-subset.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+:root{
+  --pri:#3B82F6;--pri-d:#1D4ED8;--pri-l:#EFF6FF;
+  --ok:#22C55E;--warn:#F59E0B;--err:#EF4444;
+  --bg:#F1F5F9;--card:#fff;--border:#E2E8F0;
+  --text:#1E293B;--muted:#64748B;
+  --r:10px;--sh:0 1px 3px rgba(0,0,0,.1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:14px}
+
+.main-nav{position:sticky;top:0;z-index:200;background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;height:56px;box-shadow:var(--sh);gap:8px}
+.nav-logo{font-size:15px;font-weight:700;color:var(--pri);margin-right:16px;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.nav-tabs{display:flex;gap:4px;align-items:center;flex:1;overflow-x:auto}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{padding:7px 14px;border:none;background:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:all .15s;white-space:nowrap}
+.nav-tab:hover{background:var(--bg);color:var(--text)}
+.nav-tab.active{background:var(--pri-l);color:var(--pri)}
+.nav-tab-add{padding:6px 12px;border:1.5px dashed var(--border);background:none;border-radius:8px;cursor:pointer;font-size:12px;color:var(--muted);transition:all .15s;white-space:nowrap}
+.nav-tab-add:hover{border-color:var(--pri);color:var(--pri)}
+.nav-version{margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap}
+
+.sec-nav{position:sticky;top:56px;z-index:100;background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:2px;height:42px;overflow-x:auto}
+.sec-nav::-webkit-scrollbar{display:none}
+.sec-lnk{padding:5px 10px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--muted);white-space:nowrap;transition:all .15s;border:none;background:none}
+.sec-lnk:hover{background:var(--bg);color:var(--text)}
+.sec-lnk.active{background:var(--pri-l);color:var(--pri);font-weight:600}
+
+.page{display:none;padding:28px 24px;max-width:1200px;margin:0 auto}
+.page.active{display:block}
+.section{margin-bottom:44px;scroll-margin-top:110px}
+.sec-hd{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.sec-ico{width:34px;height:34px;border-radius:9px;background:var(--pri-l);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sec-ico svg{width:17px;height:17px;stroke:var(--pri);stroke-width:2;fill:none}
+.nav-logo svg{width:17px;height:17px;stroke:var(--pri);stroke-width:2;fill:none}
+.rev-ttl svg{width:14px;height:14px;stroke:var(--muted);stroke-width:2;fill:none}
+.sec-ttl{font-size:18px;font-weight:700}
+.sec-badge{background:var(--pri-l);color:var(--pri);font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--sh)}
+
+/* GOALS */
+.goal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.goal-card{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--pri);border-radius:var(--r);padding:18px;box-shadow:var(--sh)}
+.goal-n{font-size:11px;font-weight:700;color:var(--pri);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.goal-txt{font-size:13px;line-height:1.75}
+
+/* CALENDAR */
+.cal-wrap{display:flex;flex-direction:column;gap:18px}
+.cal-months{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.cal-month{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.cal-mhd{background:var(--pri);color:#fff;padding:12px 18px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+.cal-mhd-sub{font-size:11px;opacity:.8}
+.cal-whd{display:grid;grid-template-columns:repeat(5,1fr);background:var(--bg);border-bottom:1px solid var(--border)}
+.cal-wd{padding:7px;text-align:center;font-size:11px;font-weight:600;color:var(--muted)}
+.cal-body{padding:8px;display:flex;flex-direction:column;gap:4px}
+.cal-row{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.cal-cell{min-height:72px;border-radius:7px;padding:6px;background:var(--bg)}
+.cal-cell.empty{background:transparent;min-height:0;pointer-events:none}
+.cal-cell.holiday{background:#FEF2F2}
+.cal-cell.today{background:var(--pri-l);outline:2px solid var(--pri)}
+.cal-dn{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:3px}
+.cal-cell.today .cal-dn{color:var(--pri)}
+.cal-cell.holiday .cal-dn{color:var(--err)}
+.cal-ev{font-size:10px;padding:2px 5px;border-radius:3px;margin-bottom:2px;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.ev-ms{background:#DBEAFE;color:#1D4ED8}
+.ev-st{background:#D1FAE5;color:#065F46}
+.ev-sh{background:#FEF3C7;color:#92400E}
+.ev-cc{background:#E0E7FF;color:#3730A3}
+.ev-mt{background:#FCE7F3;color:#9D174D}
+.ev-lc{background:#FEE2E2;color:#991B1B;font-weight:700}
+.ev-hd{background:#F3F4F6;color:#374151}
+.cal-legend{display:flex;flex-wrap:wrap;gap:10px;padding:12px 18px;border-top:1px solid var(--border);background:var(--bg)}
+.leg-i{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.leg-d{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh)}
+table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card)}
+thead th{background:var(--bg);padding:10px 14px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);white-space:nowrap}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#FAFAFA}
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;line-height:1.6}
+.tg-bl{background:#DBEAFE;color:#1E40AF}
+.tg-gn{background:#D1FAE5;color:#065F46}
+.tg-yw{background:#FEF3C7;color:#92400E}
+.tg-pp{background:#E0E7FF;color:#3730A3}
+.tg-pk{background:#FCE7F3;color:#9D174D}
+.tg-gy{background:#F3F4F6;color:#374151}
+
+/* CURRICULUM TABS */
+.tab-grp{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+.tab-btn{padding:6px 14px;border:1.5px solid var(--border);background:#fff;border-radius:7px;cursor:pointer;font-size:12px;color:var(--muted);transition:all .15s}
+.tab-btn:hover{border-color:var(--pri);color:var(--pri)}
+.tab-btn.active{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:500}
+.tab-pnl{display:none}
+.tab-pnl.active{display:block}
+
+/* RESOURCES */
+.res-list{display:flex;flex-direction:column;gap:10px}
+.res-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh)}
+.res-ico{width:34px;height:34px;border-radius:8px;background:var(--pri-l);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.res-info{flex:1;min-width:0}
+.res-name{font-weight:600;font-size:13px}
+.res-desc{font-size:11px;color:var(--muted);margin-top:2px}
+.res-acts{display:flex;gap:6px;align-items:center;flex-shrink:0}
+
+/* ATTENDEES */
+.att-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.att-sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center;box-shadow:var(--sh)}
+.att-num{font-size:26px;font-weight:700;color:var(--pri)}
+.att-lbl{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* CHECKLIST */
+.cl-phase{margin-bottom:18px}
+.cl-phd{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;background:var(--bg);border:1px solid var(--border);border-radius:8px 8px 0 0;cursor:pointer;user-select:none;transition:background .15s}
+.cl-phd:hover{background:#E9EEF5}
+.cl-phd.collapsed-hd{border-radius:8px}
+.cl-ptitl{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
+.cl-pprog{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.pbar{width:72px;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.pfill{height:100%;background:var(--ok);border-radius:3px;transition:width .3s}
+.cl-items{border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;overflow:hidden}
+.cl-items.hidden{display:none}
+.cl-item{display:flex;align-items:flex-start;gap:10px;padding:10px 15px;background:#fff;border-bottom:1px solid var(--border);transition:background .15s}
+.cl-item:last-child{border-bottom:none}
+.cl-item:hover{background:var(--bg)}
+.cl-item.done{background:#F0FDF4}
+.cl-item.done .cl-itxt{text-decoration:line-through;color:var(--muted)}
+.cl-item input[type=checkbox]{width:15px;height:15px;margin-top:2px;accent-color:var(--ok);cursor:pointer;flex-shrink:0}
+.cl-icnt{flex:1}
+.cl-itxt{font-size:13px}
+.cl-imeta{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+.cl-itag{font-size:10px;padding:1px 6px;border-radius:20px}
+.it-own{background:#EDE9FE;color:#5B21B6}
+.it-tim{background:#FEF3C7;color:#92400E}
+.it-nt{background:#F3F4F6;color:#374151}
+.toggle-ico{font-size:11px;transition:transform .2s;color:var(--muted)}
+.toggle-ico.open{transform:rotate(180deg)}
+
+/* REVIEW */
+.rev-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.rev-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--sh)}
+.rev-ttl{font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+textarea{width:100%;border:1px solid var(--border);border-radius:7px;padding:9px;font-size:12px;font-family:inherit;color:var(--text);resize:vertical;min-height:100px;outline:none;transition:border-color .15s}
+textarea:focus{border-color:var(--pri)}
+textarea::placeholder{color:var(--muted)}
+.stars{display:flex;gap:4px;margin-bottom:8px}
+.star{font-size:22px;cursor:pointer;color:#D1D5DB;transition:color .1s;user-select:none}
+.star.on{color:#F59E0B}
+.survey-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.survey-item{border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--bg)}
+.survey-lbl{font-size:12px;font-weight:600;margin-bottom:8px;color:var(--muted)}
+
+/* GUIDE */
+.info-box{background:var(--pri-l);border:1px solid #BFDBFE;border-radius:8px;padding:12px 16px;font-size:13px;color:#1E40AF;margin-bottom:14px;line-height:1.7}
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:10px;top:0;bottom:0;width:2px;background:var(--border)}
+.tl-item{position:relative;margin-bottom:20px}
+.tl-dot{position:absolute;left:-24px;top:4px;width:14px;height:14px;border-radius:50%;background:var(--pri);border:3px solid #fff;box-shadow:0 0 0 2px var(--pri)}
+.tl-lbl{font-size:11px;font-weight:700;color:var(--pri);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.tl-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;box-shadow:var(--sh)}
+.tl-card h4{font-size:13px;font-weight:600;margin-bottom:8px}
+.tl-ul{list-style:none}
+.tl-ul li{font-size:12px;padding:3px 0;color:var(--text);display:flex;gap:6px;line-height:1.6}
+.tl-ul li::before{content:'·';color:var(--pri);font-weight:700;flex-shrink:0}
+
+.lv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.lv-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--sh);text-align:center;position:relative;overflow:hidden}
+.lv-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+.lv-card.lv1::before{background:#94A3B8}
+.lv-card.lv2::before{background:var(--warn)}
+.lv-card.lv3::before{background:var(--pri)}
+.lv-n{font-size:28px;font-weight:800;margin-bottom:6px}
+.lv-card.lv1 .lv-n{color:#94A3B8}
+.lv-card.lv2 .lv-n{color:var(--warn)}
+.lv-card.lv3 .lv-n{color:var(--pri)}
+.lv-nm{font-size:13px;font-weight:600;margin-bottom:8px}
+.lv-d{font-size:12px;color:var(--muted);line-height:1.6}
+.lv-ex{font-size:11px;color:var(--muted);margin-top:8px;font-style:italic;padding:6px;background:var(--bg);border-radius:5px}
+
+.rr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.rr-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.rr-hd{padding:10px 13px;font-size:12px;font-weight:700;background:var(--bg);border-bottom:1px solid var(--border)}
+.rr-body{padding:12px 13px}
+.rr-role{font-size:11px;font-weight:600;color:var(--pri);margin-bottom:4px;padding:2px 0;border-bottom:1px dashed var(--border)}
+.rr-ul{list-style:none;margin-bottom:8px}
+.rr-ul li{font-size:11px;color:var(--muted);padding:2px 0;line-height:1.5}
+.rr-out{font-size:10px;font-weight:700;color:var(--muted);margin-top:8px;margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em}
+
+.dept-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.dept-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;box-shadow:var(--sh)}
+.dept-nm{font-size:12px;font-weight:700;margin-bottom:8px;color:var(--pri)}
+.dept-person{font-size:12px;color:var(--muted);padding:2px 0}
+.dept-person b{color:var(--text);font-weight:500}
+
+/* BUTTONS */
+.btn{padding:8px 16px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:none;font-family:inherit;display:inline-flex;align-items:center;gap:5px}
+.btn-pri{background:var(--pri);color:#fff}.btn-pri:hover{background:var(--pri-d)}
+.btn-ghost{background:#fff;color:var(--muted);border:1px solid var(--border)}.btn-ghost:hover{background:var(--bg);color:var(--text)}
+.btn-sm{padding:5px 11px;font-size:12px;border-radius:6px}
+.btn-err{background:#FEF2F2;color:var(--err)}.btn-err:hover{background:var(--err);color:#fff}
+.btn-lnk{background:var(--pri-l);color:var(--pri);text-decoration:none}.btn-lnk:hover{background:var(--pri);color:#fff}
+
+/* FORM */
+.form-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:flex-start}
+.form-label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;display:block}
+.form-group{display:flex;flex-direction:column;flex:1;min-width:100px}
+input[type=text],input[type=tel],input[type=url],select{width:100%;padding:7px 11px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;background:#fff;color:var(--text)}
+input:focus,select:focus{border-color:var(--pri)}
+
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;align-items:center;justify-content:center}
+.modal-ov.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:22px;width:480px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-ttl{font-size:15px;font-weight:700;margin-bottom:18px}
+.modal-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+
+/* UTILS */
+.flex-bw{display:flex;justify-content:space-between;align-items:center}
+.flex-c{display:flex;align-items:center;gap:8px}
+.mt-3{margin-top:12px}.mt-4{margin-top:16px}.mb-3{margin-bottom:12px}
+.text-muted{color:var(--muted)}
+.text-sm{font-size:12px}
+.divider{border:none;border-top:1px solid var(--border);margin:18px 0}
+.empty-state{text-align:center;padding:32px;color:var(--muted);font-size:13px;background:var(--bg);border-radius:var(--r);border:1px dashed var(--border)}
+.doc-link{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--pri);text-decoration:none;padding:6px 12px;background:var(--pri-l);border-radius:7px;transition:all .15s}
+.doc-link:hover{background:var(--pri);color:#fff}
+
+.goal-card{position:relative}
+.goal-acts{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.goal-card:hover .goal-acts{opacity:1}
+.btn-icon{width:26px;height:26px;padding:0;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border:none;transition:all .15s;flex-shrink:0}
+.btn-icon svg{width:12px;height:12px;stroke:currentColor;stroke-width:2;fill:none;pointer-events:none}
+.btn-edit-ic{background:var(--pri-l);color:var(--pri)}.btn-edit-ic:hover{background:var(--pri);color:#fff}
+.btn-del-ic{background:#FEF2F2;color:var(--err)}.btn-del-ic:hover{background:var(--err);color:#fff}
+.cl-item-acts{display:flex;gap:4px;align-items:flex-start;padding-top:1px;flex-shrink:0;opacity:0;transition:opacity .15s}
+.cl-item:hover .cl-item-acts{opacity:1}
+.modal-wide{width:600px}
+@media(max-width:768px){
+  .page{padding:16px 12px}
+  .goal-grid,.cal-months,.rev-grid,.rr-grid,.lv-grid{grid-template-columns:1fr}
+  .att-sum{grid-template-columns:1fr 1fr}
+  .dept-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ── MAIN NAV ── -->
+<nav class="main-nav">
+  <div class="nav-logo"><i data-lucide="layout-dashboard"></i> 교육 관리</div>
+  <div class="nav-tabs" id="navTabs">
+    <button class="nav-tab" data-page="guide" onclick="switchPage('guide')">프로세스 가이드</button>
+    <button class="nav-tab active" data-page="t50" onclick="switchPage('t50')">T50 2세대</button>
+    <button class="nav-tab-add" onclick="openModal('modal-add-product')">+ 제품 추가</button>
+  </div>
+  <span class="nav-version">v2.0 · 2025.10.01</span>
+</nav>
+
+<!-- ── SECTION NAV ── -->
+<nav class="sec-nav" id="secNav"></nav>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE: 프로세스 가이드                            -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-guide" class="page">
+
+  <!-- 문서 활용법 -->
+  <section class="section" id="guide-usage">
+    <div class="sec-hd"><div class="sec-ico"><i data-lucide="file-text"></i></div><h2 class="sec-ttl">문서 활용법</h2></div>
+    <div class="info-box">
+      신제품 출시 교육 시, 이 페이지에서 제품별 교육 프로젝트를 생성하고 전체 프로세스를 관리합니다.
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>단계</th><th>내용</th><th>시점</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag tg-bl">1단계</span></td><td>우측 상단 <b>+ 제품 추가</b>를 눌러 신제품 교육 페이지 생성</td><td>출시 1.5개월 전</td></tr>
+          <tr><td><span class="tag tg-bl">2단계</span></td><td>제품 특성에 맞게 교육 Level 결정 (하단 기준 참고)</td><td>출시 1.5개월 전</td></tr>
+          <tr><td><span class="tag tg-bl">3단계</span></td><td>체크리스트를 진행하며 실시간 업데이트</td><td>진행 중</td></tr>
+          <tr><td><span class="tag tg-bl">4단계</span></td><td>교육 완료 후 결과 리뷰 섹션에 디브리핑 내용 기록, 다음 버전 반영</td><td>교육 후</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-4" style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="doc-link" href="https://fursys.atlassian.net/wiki/spaces/sidizbrand/pages/2164916523/Form_?atl_f=PAGETREE" target="_blank">📋 교육 프로세스 운영 폼 (Confluence)</a>
+      <a class="doc-link" href="https://fursys.atlassian.net/wiki/spaces/0000" target="_blank">📊 의자 제품 출시 계획표</a>
+      <a class="doc-link" href="https://docs.google.com/spreadsheets/d/1qv9dHSfhE_d-qYS6gANpWfI8z8605nmVeq7uDvL2SdE/edit?gid=1534386545" target="_blank">📑 교육 프로세스 운영 구글 시트</a>
+    </div>
+  </section>
+
+  <!-- 기간별 진행 사항 -->
+  <section class="section" id="guide-timeline">
+    <div class="sec-hd"><div class="sec-ico"><i data-lucide="calendar"></i></div><h2 class="sec-ttl">기간별 진행 사항</h2></div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-lbl">출시 3주 전</div>
+        <div class="tl-card">
+          <h4>실무자 구성 & 커뮤니케이션 채널 개설</h4>
+          <ul class="tl-ul">
+            <li>TF 팀즈 단톡방 개설 (TF 참여자 + 관련 팀장 + 유관부서)</li>
+            <li>교육 계획 수립 · 일정 확정</li>
+          </ul>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
+            <b style="font-size:11px;color:var(--muted)">산출물</b>
+            <p style="font-size:12px;color:var(--muted);margin-top:3px">-</p>
+          </div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-lbl">출시 3주 전</div>
+        <div class="tl-card">
+          <h4>자료 제작 · 마스터가이드 배포</h4>
+          <ul class="tl-ul">
+            <li>제품 마스터 가이드 1차 완성 (D-21) — PPT, 글자 포인트 25pt 이상</li>
+            <li>각 교육자 소개 슬라이드 포함</li>
+            <li>질의응답 취합 요청 발송 (매장: 패들렛 / 컨택센터: PPT / 시공팀: PPT)</li>
+          </ul>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
+            <b style="font-size:11px;color:var(--muted)">산출물</b>
+            <p style="font-size:12px;color:var(--muted);margin-top:3px">마스터 가이드 · MOT별 질문 리스트</p>
+          </div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-lbl">출시 2주 전</div>
+        <div class="tl-card">
+          <h4>사전 질의 수합 · 자료 완성</h4>
+          <ul class="tl-ul">
+            <li>질의응답 취합 마감 및 정리 (D-14), 미리 배포하여 교육 시간 효율화</li>
+            <li>파트별 맞춤 교육 자료 업데이트</li>
+            <li>교육 품의 작성 · 매출외출고 신청</li>
+            <li>교육용 제품 입고 확인 (1~2주 전, 실제 사용해볼 수 있게)</li>
+          </ul>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
+            <b style="font-size:11px;color:var(--muted)">산출물</b>
+            <p style="font-size:12px;color:var(--muted);margin-top:3px">질의응답 배포 문서</p>
+          </div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-lbl">출시 1주 전</div>
+        <div class="tl-card">
+          <h4>대상별 교육 진행</h4>
+          <ul class="tl-ul">
+            <li>매장 · 컨택센터 · 시공팀 · AS엔지니어 · 본사 사업부 교육</li>
+            <li>출석체크 · 현장 Q&amp;A 기록 · 사진/영상 촬영 · 만족도 설문 배포</li>
+          </ul>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
+            <b style="font-size:11px;color:var(--muted)">산출물</b>
+            <p style="font-size:12px;color:var(--muted);margin-top:3px">교육 사진/영상 · 설문 결과 · 추가 질의</p>
+          </div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--err);box-shadow:0 0 0 2px var(--err)"></div>
+        <div class="tl-lbl" style="color:var(--err)">D-DAY · 제품 출시</div>
+        <div class="tl-card" style="border-color:#FECACA">
+          <h4>제품 출시</h4>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--ok);box-shadow:0 0 0 2px var(--ok)"></div>
+        <div class="tl-lbl" style="color:var(--ok)">교육 후</div>
+        <div class="tl-card">
+          <h4>디브리핑 & 개선</h4>
+          <ul class="tl-ul">
+            <li>교육 사진/영상 업로드 (1주일 내)</li>
+            <li>디브리핑 회의 진행 (1주일 내)</li>
+            <li>설문 취합 및 분석 (2주일 내)</li>
+            <li>추가 학습 자료 보완 · 개선사항 정리 (2주일 내)</li>
+          </ul>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
+            <b style="font-size:11px;color:var(--muted)">산출물</b>
+            <p style="font-size:12px;color:var(--muted);margin-top:3px">디브리핑 보고서 · 개선 과제 · 보완 자료</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 교육 Level -->
+  <section class="section" id="guide-levels">
+    <div class="sec-hd"><div class="sec-ico"><i data-lucide="layers"></i></div><h2 class="sec-ttl">제품별 교육 방식</h2></div>
+    <div class="info-box">제품이 시공/택배 여부를 먼저 확인하고, 사업 방향에 따라 Level을 결정합니다.</div>
+    <div class="lv-grid">
+      <div class="lv-card lv1">
+        <div class="lv-n">L1</div>
+        <div class="lv-nm">글 공지</div>
+        <div class="lv-d">에브리싯 공지 또는 마스터 가이드 배포만으로 진행</div>
+        <div class="lv-ex">예) 굿즈, 특정 소재, 스페셜 에디션</div>
+      </div>
+      <div class="lv-card lv2">
+        <div class="lv-n">L2</div>
+        <div class="lv-nm">마스터 가이드 활용</div>
+        <div class="lv-d">마스터 가이드 배포 + 온라인 설명</div>
+        <div class="lv-ex">예) 트레보</div>
+      </div>
+      <div class="lv-card lv3">
+        <div class="lv-n">L3</div>
+        <div class="lv-nm">오프라인 강의</div>
+        <div class="lv-d">마스터 가이드 활용 오프라인 강의 + 실습</div>
+        <div class="lv-ex">예) GX, T60 &amp; T60 AIR</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 대상별 세부 계획 -->
+  <section class="section" id="guide-targets">
+    <div class="sec-hd"><div class="sec-ico"><i data-lucide="users"></i></div><h2 class="sec-ttl">교육 대상별 세부 계획</h2><span class="sec-badge">Level 3 기준</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>대상</th><th>형식</th><th>주요 내용</th><th>장소</th><th>시간</th><th>예상 인원</th><th>특이사항</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>매장 직원</b><br><span class="tag tg-bl" style="margin-top:4px">교육자: 상품기획⭐</span></td>
+            <td>오프라인<br>온라인(Zoom 병행)</td>
+            <td>제품 기획의도·추천 고객군·예산 포인트<br>사용 가능 신장 등 자세한 설명<br>기존 제품 소재·착좌감 비교 (고객 관점)<br>이지리페어 항목 및 교체 방법</td>
+            <td>본사 4C / 311홀</td>
+            <td>약 3H</td>
+            <td>20명<br><span class="text-muted text-sm">(+온라인 50명)</span></td>
+            <td>시디즈 전반 제품 Q&amp;A 세션도 함께 기획</td>
+          </tr>
+          <tr>
+            <td><b>컨택센터 상담원</b><br><span class="tag tg-pp" style="margin-top:4px">교육자: 연구소⭐</span></td>
+            <td>오프라인</td>
+            <td>제품 기획의도·추천 고객군<br>제품 세부 조립 단계<br>마감재·소재 고객 우려사항<br>박스 크기 (상차·하차·적재)</td>
+            <td>컨택센터 (ICS)</td>
+            <td>1.5H<br><span class="text-muted text-sm">17:40~19:10</span></td>
+            <td>10명</td>
+            <td>근무시간 이후 교육, 최소 2주 전 공지 필요<br>재택 근무자 다수</td>
+          </tr>
+          <tr>
+            <td><b>시공팀장</b></td>
+            <td>오프라인</td>
+            <td>시공 시 유의사항<br>AS 부위별 교체 방법 (지방 시공팀 영상 필수)<br>제품 조립 파손 리스크 및 하자 예방법</td>
+            <td>안성공장 3층 교육실</td>
+            <td>1H<br><span class="text-muted text-sm">05:30~06:30</span></td>
+            <td>50명</td>
+            <td>상차 후·시공 전 시간 활용<br>안성공장 경영지원팀 장소 협조 필요</td>
+          </tr>
+          <tr>
+            <td><b>AS 엔지니어팀장</b></td>
+            <td>오프라인</td>
+            <td>AS 부위별 교체 방법 (1H 실습 필요)<br>제품 체험</td>
+            <td>본사 7A</td>
+            <td>1.5H</td>
+            <td>6명<br><span class="text-muted text-sm">(권역장 포함)</span></td>
+            <td>AS 간담회 일정에 맞춰 교육 진행</td>
+          </tr>
+          <tr>
+            <td><b>본사 사업부</b></td>
+            <td>오프라인</td>
+            <td>제품 체험<br>제품 관련 피드백 수집</td>
+            <td>본사</td>
+            <td>-</td>
+            <td>50명</td>
+            <td>사업부 품평·앉방데이 활용</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- R&R -->
+  <section class="section" id="guide-rr">
+    <div class="sec-hd"><div class="sec-ico"><i data-lucide="briefcase"></i></div><h2 class="sec-ttl">R&amp;R</h2></div>
+    <div class="rr-grid">
+      <div class="rr-card">
+        <div class="rr-hd">교육 담당 (옴니채널운영팀)</div>
+        <div class="rr-body">
+          <div class="rr-role">주요 업무: 프로젝트 운영</div>
+          <ul class="rr-ul">
+            <li>교육 대상자 확정 (상품기획팀과 협의)</li>
+            <li>교육 운영 (장소·시간·출석·설문)</li>
+            <li>각 교육 대상자 Q&amp;A 취합 및 정리</li>
+            <li>예산 관리 및 매출외출고 처리</li>
+            <li>디브리핑 및 개선안 도출</li>
+          </ul>
+          <div class="rr-out">주요 산출물</div>
+          <ul class="rr-ul">
+            <li>교육 운영 계획</li>
+            <li>설문조사 분석</li>
+            <li>디브리핑 보고서</li>
+          </ul>
+        </div>
+      </div>
+      <div class="rr-card">
+        <div class="rr-hd">상품기획팀</div>
+        <div class="rr-body">
+          <div class="rr-role">주요 업무: 컨텐츠 제작·교육</div>
+          <ul class="rr-ul">
+            <li>마스터 가이드 제작</li>
+            <li>제품 기획 의도 및 특장점 설명</li>
+            <li>타사 제품 비교 및 세그멘테이션 설명</li>
+            <li>Q&amp;A 답변 작성</li>
+          </ul>
+          <div class="rr-out">주요 산출물</div>
+          <ul class="rr-ul">
+            <li>제품 마스터 가이드 (PPT)</li>
+            <li>Q&amp;A 답변 문서</li>
+          </ul>
+        </div>
+      </div>
+      <div class="rr-card">
+        <div class="rr-hd">의자개발팀 (연구소)</div>
+        <div class="rr-body">
+          <div class="rr-role">주요 업무: 기술 지원</div>
+          <ul class="rr-ul">
+            <li>제품 설계 의도 및 세부 사항 설명</li>
+            <li>기술적 질의응답</li>
+            <li>AS 상황별 대응 방안 제시</li>
+            <li>조립/분해 영상 제작</li>
+          </ul>
+          <div class="rr-out">주요 산출물</div>
+          <ul class="rr-ul">
+            <li>제품 기술 관련 자료</li>
+            <li>조립·AS 영상</li>
+          </ul>
+        </div>
+      </div>
+      <div class="rr-card">
+        <div class="rr-hd">품질관리팀</div>
+        <div class="rr-body">
+          <div class="rr-role">주요 업무: 기술 지원</div>
+          <ul class="rr-ul">
+            <li>시공 시 주의사항 교육</li>
+            <li>AS 시 주의사항 교육</li>
+            <li>실습 진행 및 지도</li>
+          </ul>
+          <div class="rr-out">주요 산출물</div>
+          <ul class="rr-ul">
+            <li>하자 예방 체크리스트</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="mt-4">
+      <h4 style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--muted)">유관부서</h4>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>팀명</th><th>역할</th></tr></thead>
+          <tbody>
+            <tr><td>옴니채널운영팀</td><td>매장직원 일정 조율, 대상자 모집</td></tr>
+            <tr><td>CS사업팀 (레터스)</td><td>컨택센터 일정 조율, 장소 협조, 대상자 모집, 질문 취합</td></tr>
+            <tr><td>라마사팀 (레터스)</td><td>AS엔지니어팀·시공팀 일정 조율, 질문 취합</td></tr>
+            <tr><td>안성공장 경영지원팀</td><td>시공팀 장소 협조</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 유관부서 -->
+  <section class="section" id="guide-departments">
+    <div class="sec-hd"><div class="sec-ico"><i data-lucide="contact-2"></i></div><h2 class="sec-ttl">유관부서 담당자</h2><span class="sec-badge">2025.09.29 T60 교육 기준</span></div>
+    <div class="dept-grid">
+      <div class="dept-card">
+        <div class="dept-nm">옴니채널운영팀</div>
+        <div class="dept-person"><b>최선균</b> (팀장)</div>
+        <div class="dept-person"><b>염제명</b> (팀원)</div>
+      </div>
+      <div class="dept-card">
+        <div class="dept-nm">상품기획팀</div>
+        <div class="dept-person"><b>황민영</b> (팀장)</div>
+        <div class="dept-person"><b>이윤주</b> (팀원)</div>
+      </div>
+      <div class="dept-card">
+        <div class="dept-nm">의자개발팀</div>
+        <div class="dept-person"><b>고태진</b> (팀장)</div>
+        <div class="dept-person"><b>정규식</b> (팀원)</div>
+      </div>
+      <div class="dept-card">
+        <div class="dept-nm">품질관리팀</div>
+        <div class="dept-person"><b>김용철</b> (팀장)</div>
+      </div>
+      <div class="dept-card">
+        <div class="dept-nm">옴니채널구축팀</div>
+        <div class="dept-person"><b>신수연</b> (팀장)</div>
+        <div class="dept-person"><b>유성호</b> (팀원)</div>
+      </div>
+      <div class="dept-card">
+        <div class="dept-nm">라마사팀 (레터스)</div>
+        <div class="dept-person"><b>김기호</b> (팀장)</div>
+        <div class="dept-person"><b>김진우</b> (팀원)</div>
+      </div>
+      <div class="dept-card">
+        <div class="dept-nm">CS사업팀 (레터스)</div>
+        <div class="dept-person"><b>이희용</b> (팀장)</div>
+        <div class="dept-person"><b>양다연</b> (팀원)</div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /page-guide -->
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE: T50 2세대                                 -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-t50" class="page active">
+
+  <!-- 1. 교육 목표 -->
+  <section class="section" id="t50-goals">
+    <div class="sec-hd">
+      <div class="sec-ico"><i data-lucide="target"></i></div>
+      <h2 class="sec-ttl">교육 목표</h2>
+      <span class="sec-badge">T50 2세대 · 세미넉다운/풀넉다운</span>
+    </div>
+    <div id="goalsGrid" class="goal-grid"></div>
+    <div class="mt-3">
+      <button class="btn btn-pri btn-sm" onclick="openEditGoal(null)">+ 목표 추가</button>
+    </div>
+  </section>
+
+  <!-- 2. 캘린더 -->
+  <section class="section" id="t50-calendar">
+    <div class="sec-hd"><div class="sec-ico"><i data-lucide="calendar-days"></i></div><h2 class="sec-ttl">교육 일정 캘린더</h2></div>
+    <div class="cal-wrap">
+      <div class="cal-months" id="calendarContainer"></div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--muted)">범례</div>
+        <div class="cal-legend">
+          <div class="leg-i"><div class="leg-d" style="background:#DBEAFE"></div> 마일스톤</div>
+          <div class="leg-i"><div class="leg-d" style="background:#D1FAE5"></div> 시공팀 교육</div>
+          <div class="leg-i"><div class="leg-d" style="background:#FEF3C7"></div> 매장 교육</div>
+          <div class="leg-i"><div class="leg-d" style="background:#E0E7FF"></div> 컨택센터/AS 교육</div>
+          <div class="leg-i"><div class="leg-d" style="background:#FCE7F3"></div> 내부 행사</div>
+          <div class="leg-i"><div class="leg-d" style="background:#FEE2E2"></div> 제품 출시</div>
+          <div class="leg-i"><div class="leg-d" style="background:#F3F4F6"></div> 공휴일/선거</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 일정 요약 -->
+  <section class="section" id="t50-schedule">
+    <div class="sec-hd"><div class="sec-ico"><i data-lucide="table-2"></i></div><h2 class="sec-ttl">교육 일정 요약</h2></div>
+    <div id="scheduleContainer"></div>
+    <div class="mt-3">
+      <button class="btn btn-pri btn-sm" onclick="openEditSchedule(null)">+ 일정 추가</button>
+    </div>
+    <div class="card mt-4" style="background:#FFFBEB;border-color:#FDE68A">
+      <b style="font-size:12px;color:#92400E">📍 컨택센터 방문 안내</b>
+      <p style="font-size:12px;color:#92400E;margin-top:6px;line-height:1.8">
+        주소: 경기도 성남시 수정구 산성대로 223, 9층 ICS<br>
+        엘리베이터 하차 후 큰 철문 → 왼쪽 라인 전체가 센터 (오른쪽은 다른 업체)<br>
+        왼쪽 뒷문으로 들어오시면 대교육실이 있습니다.<br>
+        🚗 방문자 주차 시 <b>차량 번호 사전 공유 필요</b><br>
+        ⏰ 컨택센터 상담 시간 17:30까지 — 그 전 도착 시 조용히 입장 부탁
+      </p>
+    </div>
+  </section>
+
+  <!-- 4. 교육 커리큘럼 -->
+  <section class="section" id="t50-curriculum">
+    <div class="sec-hd"><div class="sec-ico"><i data-lucide="book-open"></i></div><h2 class="sec-ttl">교육 커리큘럼</h2></div>
+    <div class="tab-grp">
+      <button class="tab-btn active" onclick="switchTab('curr','common')">공통 교육</button>
+      <button class="tab-btn" onclick="switchTab('curr','store')">매장 직원</button>
+      <button class="tab-btn" onclick="switchTab('curr','install')">시공팀</button>
+      <button class="tab-btn" onclick="switchTab('curr','contact')">컨택센터</button>
+      <button class="tab-btn" onclick="switchTab('curr','as')">AS 엔지니어</button>
+    </div>
+
+    <!-- 공통 -->
+    <div class="tab-pnl active" id="curr-common">
+      <div id="curr-common-tbl"></div>
+      <div class="mt-3"><button class="btn btn-pri btn-sm" onclick="openEditCurriculum('common',null)">+ 항목 추가</button></div>
+    </div>
+
+    <!-- 매장 직원 -->
+    <div class="tab-pnl" id="curr-store">
+      <div class="info-box">매장 직원 교육은 T50 세션 외에도 시디즈 전반적인 제품에 대한 질문·응답 시간을 함께 운영하여 제품에 대한 입체적인 이해를 돕습니다.</div>
+      <div id="curr-store-tbl"></div>
+      <div class="mt-3"><button class="btn btn-pri btn-sm" onclick="openEditCurriculum('store',null)">+ 항목 추가</button></div>
+      <div class="card mt-4" style="font-size:12px;color:var(--muted);line-height:1.8">
+        <b style="color:var(--text)">진행 특이사항</b><br>
+        • 본사 4C 또는 311홀 + Zoom 화상회의 동시 송출<br>
+        • 충분한 질의응답 시간 확보 필요 (심리적 안전감 조성)
+      </div>
+    </div>
+
+    <!-- 시공팀 -->
+    <div class="tab-pnl" id="curr-install">
+      <div id="curr-install-tbl"></div>
+      <div class="mt-3"><button class="btn btn-pri btn-sm" onclick="openEditCurriculum('install',null)">+ 항목 추가</button></div>
+      <div class="card mt-4" style="font-size:12px;color:var(--muted);line-height:1.8">
+        <b style="color:var(--text)">진행 특이사항</b><br>
+        • 안성공장 본관 3층 교육실, 05:30~06:30 (상차 후·시공 전 시간 활용)<br>
+        • 시공팀장님 수에 맞는 제품 수 확보 필요<br>
+        • 교육 촬영 후 지방 시공팀 시청 영상 제작 (필수)<br>
+        • 바로스 터치클래스에 시공 교육 자료 업로드
+      </div>
+    </div>
+
+    <!-- 컨택센터 -->
+    <div class="tab-pnl" id="curr-contact">
+      <div id="curr-contact-tbl"></div>
+      <div class="mt-3"><button class="btn btn-pri btn-sm" onclick="openEditCurriculum('contact',null)">+ 항목 추가</button></div>
+      <div class="card mt-4" style="font-size:12px;color:var(--muted);line-height:1.8">
+        <b style="color:var(--text)">진행 특이사항</b><br>
+        • 근무 시간 이후 (17:40~) 교육, 재택 근무자 다수 → 최소 2주 전 공지<br>
+        • 구매 / 수주 AS 파트 모두 참여<br>
+        • 사전 자료 배포 후 영상 함께 시청
+      </div>
+    </div>
+
+    <!-- AS -->
+    <div class="tab-pnl" id="curr-as">
+      <div id="curr-as-tbl"></div>
+      <div class="mt-3"><button class="btn btn-pri btn-sm" onclick="openEditCurriculum('as',null)">+ 항목 추가</button></div>
+      <div class="card mt-4" style="font-size:12px;color:var(--muted);line-height:1.8">
+        <b style="color:var(--text)">진행 특이사항</b><br>
+        • AS 간담회 일정에 맞춰 교육 진행<br>
+        • 촬영 자료 미리 배포, 영상 함께 시청
+      </div>
+    </div>
+
+  </section>
+
+  <!-- 5. 자료실 -->
+  <section class="section" id="t50-resources">
+    <div class="sec-hd"><div class="sec-ico"><i data-lucide="folder-open"></i></div><h2 class="sec-ttl">자료실</h2></div>
+    <div id="resourceList" class="res-list"></div>
+    <div class="mt-3">
+      <button class="btn btn-pri btn-sm" onclick="openEditResource(null)">+ 자료 추가</button>
+    </div>
+  </section>
+
+  <!-- 6. 참석자 명단 -->
+  <section class="section" id="t50-attendees">
+    <div class="sec-hd"><div class="sec-ico"><i data-lucide="users"></i></div><h2 class="sec-ttl">참석자 명단</h2></div>
+    <div class="att-sum" id="attendeeSummary">
+      <div class="att-sc"><div class="att-num" id="totalCount">0</div><div class="att-lbl">총 참석자</div></div>
+      <div class="att-sc"><div class="att-num" id="onsiteCount">0</div><div class="att-lbl">현장 참석</div></div>
+      <div class="att-sc"><div class="att-num" id="onlineCount">0</div><div class="att-lbl">화상회의 참석</div></div>
+    </div>
+    <div class="tbl-wrap">
+      <table id="attendeeTable">
+        <thead>
+          <tr><th>#</th><th>이름</th><th>매장/소속</th><th>휴대폰 번호</th><th>참석 방법</th><th>교육 대상</th><th>-</th></tr>
+        </thead>
+        <tbody id="attendeeBody"></tbody>
+      </table>
+    </div>
+    <div class="mt-3">
+      <button class="btn btn-pri btn-sm" onclick="openEditAttendee(null)">+ 참석자 추가</button>
+    </div>
+  </section>
+
+  <!-- 7. 체크리스트 -->
+  <section class="section" id="t50-checklist">
+    <div class="sec-hd"><div class="sec-ico"><i data-lucide="check-square"></i></div><h2 class="sec-ttl">체크리스트</h2></div>
+    <div id="checklistContainer"></div>
+  </section>
+
+  <!-- 8. 교육 결과 리뷰 -->
+  <section class="section" id="t50-review">
+    <div class="sec-hd"><div class="sec-ico"><i data-lucide="clipboard-list"></i></div><h2 class="sec-ttl">교육 결과 리뷰</h2></div>
+    <div class="rev-grid">
+      <div class="rev-card">
+        <div class="rev-ttl"><i data-lucide="bar-chart-2"></i> 만족도 설문 결과</div>
+        <div class="survey-grid">
+          <div class="survey-item">
+            <div class="survey-lbl">교육 만족도</div>
+            <div class="stars" id="stars-satisfaction" data-key="satisfaction"></div>
+            <div style="font-size:11px;color:var(--muted)" id="score-satisfaction">-점</div>
+          </div>
+          <div class="survey-item">
+            <div class="survey-lbl">제품 이해도</div>
+            <div class="stars" id="stars-understanding" data-key="understanding"></div>
+            <div style="font-size:11px;color:var(--muted)" id="score-understanding">-점</div>
+          </div>
+          <div class="survey-item">
+            <div class="survey-lbl">강의 전달력</div>
+            <div class="stars" id="stars-delivery" data-key="delivery"></div>
+            <div style="font-size:11px;color:var(--muted)" id="score-delivery">-점</div>
+          </div>
+          <div class="survey-item">
+            <div class="survey-lbl">교육 자료 품질</div>
+            <div class="stars" id="stars-material" data-key="material"></div>
+            <div style="font-size:11px;color:var(--muted)" id="score-material">-점</div>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div style="font-size:12px;font-weight:600;margin-bottom:6px;color:var(--muted)">종합 의견</div>
+          <textarea id="review-survey" placeholder="설문 결과 요약 및 주요 의견을 입력하세요" onchange="saveReview()"></textarea>
+        </div>
+      </div>
+      <div class="rev-card">
+        <div class="rev-ttl"><i data-lucide="message-square"></i> 현장 Q&amp;A 메모</div>
+        <textarea id="review-qa" placeholder="교육 현장에서 나온 질문 및 이슈를 기록하세요" onchange="saveReview()"></textarea>
+      </div>
+      <div class="rev-card">
+        <div class="rev-ttl"><i data-lucide="search"></i> 디브리핑 내용</div>
+        <textarea id="review-debrief" placeholder="교육 후 팀 내 디브리핑에서 논의된 내용을 기록하세요" onchange="saveReview()"></textarea>
+      </div>
+      <div class="rev-card">
+        <div class="rev-ttl"><i data-lucide="rocket"></i> 다음 교육 개선사항</div>
+        <textarea id="review-improve" placeholder="다음 제품 교육 시 반영할 개선사항을 기록하세요" onchange="saveReview()"></textarea>
+      </div>
+    </div>
+    <div class="card mt-4">
+      <div class="flex-bw">
+        <b style="font-size:13px">교육 최종 평가</b>
+        <span id="reviewSavedBadge" style="font-size:11px;color:var(--ok);display:none">✓ 저장됨</span>
+      </div>
+      <textarea id="review-final" placeholder="전체 교육 종합 평가 및 다음 출시 교육 시 공유할 내용을 작성하세요" style="margin-top:10px" onchange="saveReview()"></textarea>
+    </div>
+  </section>
+
+</div><!-- /page-t50 -->
+
+<!-- ── MODAL: 자료 추가/수정 ── -->
+<div class="modal-ov" id="modal-add-resource" onclick="handleModalClick(event,'modal-add-resource')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-ttl" id="res-modal-ttl">자료 추가</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">자료명</label>
+        <input type="text" id="res-name" placeholder="예: T50 2세대 마스터가이드">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">설명</label>
+        <input type="text" id="res-desc" placeholder="예: PPT 마스터가이드 v1.0">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">링크 (구글 드라이브 등)</label>
+        <input type="url" id="res-url" placeholder="https://">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex:0 0 auto">
+        <label class="form-label">종류</label>
+        <select id="res-type">
+          <option value="📄">📄 가이드/문서</option>
+          <option value="🎬">🎬 영상</option>
+          <option value="📋">📋 Q&A</option>
+          <option value="📸">📸 사진</option>
+          <option value="🔗">🔗 링크</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-resource')">취소</button>
+      <button class="btn btn-pri" id="res-save-btn" onclick="saveResourceEdit()">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: 참석자 추가/수정 ── -->
+<div class="modal-ov" id="modal-add-attendee" onclick="handleModalClick(event,'modal-add-attendee')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-ttl" id="att-modal-ttl">참석자 추가</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">이름</label>
+        <input type="text" id="att-name" placeholder="홍길동">
+      </div>
+      <div class="form-group">
+        <label class="form-label">매장/소속</label>
+        <input type="text" id="att-store" placeholder="강남점">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">휴대폰 번호</label>
+        <input type="tel" id="att-phone" placeholder="010-0000-0000">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex:0 0 auto">
+        <label class="form-label">참석 방법</label>
+        <select id="att-type">
+          <option value="현장">현장</option>
+          <option value="화상">화상회의</option>
+        </select>
+      </div>
+      <div class="form-group" style="flex:0 0 auto">
+        <label class="form-label">교육 대상</label>
+        <select id="att-target">
+          <option value="매장">매장 직원</option>
+          <option value="시공팀">시공팀</option>
+          <option value="컨택센터">컨택센터</option>
+          <option value="AS엔지니어">AS 엔지니어</option>
+          <option value="본사">본사 사업부</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-attendee')">취소</button>
+      <button class="btn btn-pri" id="att-save-btn" onclick="saveAttendeeEdit()">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: 제품 추가 ── -->
+<div class="modal-ov" id="modal-add-product" onclick="handleModalClick(event,'modal-add-product')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-ttl">새 제품 교육 페이지 추가</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">제품명</label>
+        <input type="text" id="prod-name" placeholder="예: T60 AIR">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">출시 예정일</label>
+        <input type="text" id="prod-launch" placeholder="예: 2026-09-01">
+      </div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-product')">취소</button>
+      <button class="btn btn-pri" onclick="addProduct()">페이지 추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: 교육 목표 추가/수정 ── -->
+<div class="modal-ov" id="modal-add-goal" onclick="handleModalClick(event,'modal-add-goal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-ttl" id="goal-modal-ttl">교육 목표 추가</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">제목 (예: Goal 01 · 전문성)</label>
+        <input type="text" id="goal-label" placeholder="Goal 04 · 효율">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">내용</label>
+        <textarea id="goal-text" style="min-height:80px" placeholder="목표 내용을 입력하세요"></textarea>
+      </div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-goal')">취소</button>
+      <button class="btn btn-pri" id="goal-save-btn" onclick="saveGoalEdit()">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: 일정 추가/수정 ── -->
+<div class="modal-ov" id="modal-add-schedule" onclick="handleModalClick(event,'modal-add-schedule')">
+  <div class="modal modal-wide" onclick="event.stopPropagation()">
+    <div class="modal-ttl" id="sch-modal-ttl">일정 추가</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:0 0 140px">
+        <label class="form-label">교육 대상</label>
+        <select id="sch-type">
+          <option value="tg-yw|매장 직원">매장 직원</option>
+          <option value="tg-gn|시공팀">시공팀</option>
+          <option value="tg-pp|AS 엔지니어">AS 엔지니어</option>
+          <option value="tg-bl|컨택센터">컨택센터</option>
+          <option value="tg-pk|본사 사업부">본사 사업부</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">교육명</label>
+        <input type="text" id="sch-name" placeholder="매장 인원 교육">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">일정</label>
+        <input type="text" id="sch-date" placeholder="2026년 5월 26일 (화)">
+      </div>
+      <div class="form-group" style="flex:0 0 110px">
+        <label class="form-label">시간</label>
+        <input type="text" id="sch-time" placeholder="14:00 ~ 16:00">
+      </div>
+      <div class="form-group" style="flex:0 0 80px">
+        <label class="form-label">소요</label>
+        <input type="text" id="sch-duration" placeholder="2h">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">장소</label>
+        <input type="text" id="sch-location" placeholder="본사 311홀">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">교육 담당</label>
+        <input type="text" id="sch-instructors" placeholder="이윤주 · 고태진">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">대상/인원</label>
+        <input type="text" id="sch-attendees" placeholder="시공팀 35명">
+      </div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-schedule')">취소</button>
+      <button class="btn btn-pri" id="sch-save-btn" onclick="saveScheduleEdit()">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: 커리큘럼 항목 추가/수정 ── -->
+<div class="modal-ov" id="modal-add-curriculum" onclick="handleModalClick(event,'modal-add-curriculum')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-ttl" id="cur-modal-ttl">항목 추가</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">내용</label>
+        <input type="text" id="cur-content" placeholder="제품 소개">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">상세 내용</label>
+        <textarea id="cur-detail" style="min-height:60px" placeholder="상세 내용을 입력하세요"></textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex:0 0 110px">
+        <label class="form-label">소요 시간</label>
+        <input type="text" id="cur-duration" placeholder="15분">
+      </div>
+      <div class="form-group">
+        <label class="form-label">강사</label>
+        <input type="text" id="cur-instructor" placeholder="이윤주 · 고태진">
+      </div>
+    </div>
+    <div class="form-row" id="cur-material-row">
+      <div class="form-group">
+        <label class="form-label">자료</label>
+        <input type="text" id="cur-material" placeholder="제품 마스터가이드">
+      </div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-curriculum')">취소</button>
+      <button class="btn btn-pri" id="cur-save-btn" onclick="saveCurriculumEdit()">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: 체크리스트 항목 수정 ── -->
+<div class="modal-ov" id="modal-edit-checklist" onclick="handleModalClick(event,'modal-edit-checklist')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-ttl">체크리스트 항목 수정</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">항목 내용</label>
+        <input type="text" id="cli-text" placeholder="항목 내용">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">담당자</label>
+        <input type="text" id="cli-owner" placeholder="옴니채널운영팀">
+      </div>
+      <div class="form-group" style="flex:0 0 110px">
+        <label class="form-label">일정 (D: )</label>
+        <input type="text" id="cli-timing" placeholder="05/20">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">메모</label>
+        <input type="text" id="cli-note" placeholder="추가 메모">
+      </div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit-checklist')">취소</button>
+      <button class="btn btn-pri" onclick="saveChecklistItemEdit()">저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────
+// DATA
+// ─────────────────────────────────────
+const CHECKLIST = [
+  {
+    id: 'p1', title: '출시 5주 전', icon: '', done: true,
+    items: [
+      { id: 'p1_1', text: 'TF 개설, 교육 준비 회의', owner: '옴니채널운영팀', note: '팀즈 단톡방 개설, 주간 회의 체계 수립', done: true }
+    ]
+  },
+  {
+    id: 'p2', title: '출시 4주 전', icon: '',
+    items: [
+      { id: 'p2_1', text: '제품 출시 프로세스 관련 팀즈방 개설', owner: '옴니채널운영팀', note: '출시 이후 "제품 현황 점검방"으로 운영', done: true },
+      { id: 'p2_2', text: '교육 대상 5개 부서 단톡방 및 출시일·교육 일정 안내', owner: '옴니채널운영팀', done: true },
+      { id: 'p2_3', text: '첫 회의 일정 확정', note: '5/12 완료', done: true },
+      { id: 'p2_4', text: '5개 대상 교육 일정 확정', done: true },
+      { id: 'p2_5', text: '교육용 제품 수량 확정', owner: '재석님 · 진주님', note: '안성공장 문서수발, 가능 시 WGR', done: true }
+    ]
+  },
+  {
+    id: 'p3', title: '출시 3주 전 (D-21)', icon: '',
+    items: [
+      { id: 'p3_1', text: '제품 마스터 가이드 1차 완성 및 배포', owner: '상품기획팀', timing: '05/20', done: false },
+      { id: 'p3_2', text: '질의응답 취합 요청 발송', owner: '상품기획팀', note: '매장: 패들렛 / 컨택센터: PPT(다연님) / 시공팀: PPT(진우님)', done: false },
+      { id: 'p3_3', text: '출시 교육 프로세스 품의 작성', owner: '옴니채널운영팀', done: false },
+      { id: 'p3_4', text: '매출외출고 신청 완료', owner: '옴니채널운영팀', note: '출시 품의 작성 후 진행', done: false },
+      { id: 'p3_5', text: 'AS 상황별 영상 제작 완료', owner: '연구소 · 품질관리팀', done: false },
+      { id: 'p3_6', text: '조립 영상 / 가이드 제작 완료', owner: '상품기획팀', done: false },
+      { id: 'p3_7', text: '각 MOT 교육 준비 (시공팀 · 컨택센터 · AS · 매장)', owner: '옴니채널운영팀', done: false }
+    ]
+  },
+  {
+    id: 'p4', title: '출시 2주 전 (D-14)', icon: '',
+    items: [
+      { id: 'p4_1', text: '질의응답 취합 마감 및 정리', owner: '옴니채널운영팀', done: false },
+      { id: 'p4_2', text: '질의응답 배포 (교육 전 미리 배포)', done: false },
+      { id: 'p4_3', text: '파트별 맞춤 교육 자료 업데이트', done: false },
+      { id: 'p4_4', text: '노션 페이지 제작 완료', done: false },
+      { id: 'p4_5', text: '시공 교육 자료 터치클래스 업로드', done: false },
+      { id: 'p4_6', text: '교육용 제품 입고 확인', done: false },
+      { id: 'p4_7', text: '최종 교육 자료 확정', done: false },
+      { id: 'p4_8', text: '교육 공간 및 장비 최종 점검', done: false },
+      { id: 'p4_9', text: '5개 부서 참석자 명단 확정', done: false }
+    ]
+  },
+  {
+    id: 'p5', title: '교육 진행 중', icon: '',
+    items: [
+      { id: 'p5_1', text: '출석체크 (명단 대조, 미참석자 기록)', done: false },
+      { id: 'p5_2', text: '교육 진행 (교육자료 발표, 실습)', done: false },
+      { id: 'p5_3', text: '질의응답 실시간 기록 · 추가 질문 취합', done: false },
+      { id: 'p5_4', text: '사진/영상 촬영', done: false },
+      { id: 'p5_5', text: '만족도 설문 현장 배포 (QR코드/링크)', done: false }
+    ]
+  },
+  {
+    id: 'p6', title: 'D-DAY · 제품 출시', icon: '',
+    items: [
+      { id: 'p6_1', text: '제품 출시', owner: '상품기획팀', note: 'T50 & T50 AIR BK, WW · 오프라인 + 시디즈닷컴 (6/12)', done: false }
+    ]
+  },
+  {
+    id: 'p7', title: '교육 후 — 1주일 내', icon: '',
+    items: [
+      { id: 'p7_1', text: '교육 사진/영상 업로드', owner: '교육운영', done: false },
+      { id: 'p7_2', text: '디브리핑 회의 진행', owner: '교육운영', done: false }
+    ]
+  },
+  {
+    id: 'p8', title: '교육 후 — 2주일 내', icon: '',
+    items: [
+      { id: 'p8_1', text: '설문 취합 및 분석', owner: '교육운영', done: false },
+      { id: 'p8_2', text: '추가 학습 자료 보완 작업', owner: '교육운영', done: false },
+      { id: 'p8_3', text: '다음 제품 교육 시 개선사항 정리', owner: '교육운영', done: false }
+    ]
+  }
+];
+
+const SECTION_CONFIGS = {
+  guide: [
+    { id: 'guide-usage',       label: '문서 활용법' },
+    { id: 'guide-timeline',    label: '기간별 진행' },
+    { id: 'guide-levels',      label: '교육 Level' },
+    { id: 'guide-targets',     label: '대상별 계획' },
+    { id: 'guide-rr',          label: 'R&R' },
+    { id: 'guide-departments', label: '유관부서' }
+  ],
+  t50: [
+    { id: 't50-goals',      label: '교육 목표' },
+    { id: 't50-calendar',   label: '캘린더' },
+    { id: 't50-schedule',   label: '일정 요약' },
+    { id: 't50-curriculum', label: '커리큘럼' },
+    { id: 't50-resources',  label: '자료실' },
+    { id: 't50-attendees',  label: '참석자 명단' },
+    { id: 't50-checklist',  label: '체크리스트' },
+    { id: 't50-review',     label: '결과 리뷰' }
+  ]
+};
+
+const CAL_EVENTS = {
+  '2026-05-20': [{ text: '마스터 가이드 완료', cls: 'ev-ms' }],
+  '2026-05-25': [{ text: '부처님 오신날', cls: 'ev-hd', holiday: true }],
+  '2026-05-26': [
+    { text: '시공팀 교육 05:30', cls: 'ev-st' },
+    { text: '매장 교육 14:00', cls: 'ev-sh' }
+  ],
+  '2026-05-27': [
+    { text: '오전 품경위', cls: 'ev-mt' },
+    { text: '컨택센터·AS 교육 17:40', cls: 'ev-cc' }
+  ],
+  '2026-05-28': [{ text: '앉방데이 10:00', cls: 'ev-mt' }],
+  '2026-06-04': [{ text: '지방선거', cls: 'ev-hd', holiday: true }],
+  '2026-06-12': [{ text: '🚀 T50 1차 출시', cls: 'ev-lc' }]
+};
+
+let currentPage = 't50';
+let products = [{ id: 't50', name: 'T50 2세대' }];
+
+// ─────────────────────────────────────
+// INIT
+// ─────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  renderCalendar();
+  renderChecklist();
+  loadFromStorage();
+  updateSectionNav('t50');
+  initStarRatings();
+  setupScrollSpy();
+  lucide.createIcons();
+});
+
+// ─────────────────────────────────────
+// PAGE NAVIGATION
+// ─────────────────────────────────────
+function switchPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  if (page) page.classList.add('active');
+  const tab = document.querySelector(`[data-page="${pageId}"]`);
+  if (tab) tab.classList.add('active');
+  currentPage = pageId;
+  updateSectionNav(pageId);
+}
+
+function updateSectionNav(pageId) {
+  const nav = document.getElementById('secNav');
+  const sections = SECTION_CONFIGS[pageId] || [];
+  nav.innerHTML = sections.map(s =>
+    `<button class="sec-lnk" data-sec="${s.id}" onclick="scrollToSection('${s.id}')">${s.label}</button>`
+  ).join('');
+  if (sections.length > 0) {
+    const first = nav.querySelector('.sec-lnk');
+    if (first) first.classList.add('active');
+  }
+  lucide.createIcons();
+}
+
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
+}
+
+function setupScrollSpy() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        document.querySelectorAll('.sec-lnk').forEach(l => {
+          l.classList.toggle('active', l.dataset.sec === id);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  document.querySelectorAll('.section').forEach(s => observer.observe(s));
+}
+
+// ─────────────────────────────────────
+// CURRICULUM TABS
+// ─────────────────────────────────────
+function switchTab(group, id) {
+  const prefix = group + '-';
+  document.querySelectorAll('.tab-pnl[id^="' + prefix + '"]').forEach(p => p.classList.remove('active'));
+  document.getElementById(prefix + id).classList.add('active');
+  event.currentTarget.closest('.section').querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent === event.currentTarget.textContent);
+  });
+}
+
+// ─────────────────────────────────────
+// CALENDAR
+// ─────────────────────────────────────
+function renderCalendar() {
+  const container = document.getElementById('calendarContainer');
+  const months = [
+    { year: 2026, month: 5, label: '2026년 5월', sub: '교육 준비 ~ 시공팀·매장 교육' },
+    { year: 2026, month: 6, label: '2026년 6월', sub: '제품 출시 D-DAY' }
+  ];
+  container.innerHTML = months.map(m => renderMonth(m)).join('');
+}
+
+function renderMonth({ year, month, label, sub }) {
+  const today = new Date(2026, 4, 20); // 오늘: 2026-05-20
+  const firstDay = new Date(year, month - 1, 1).getDay();
+  const offset = firstDay === 0 ? 6 : firstDay - 1; // Mon=0
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  // Build a 5-week grid of Mon-Fri only
+  let cells = Array(offset).fill(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month - 1, d);
+    const dow = date.getDay(); // 0=Sun
+    if (dow === 0 || dow === 6) continue;
+    cells.push(d);
+  }
+  // pad to multiple of 5
+  while (cells.length % 5 !== 0) cells.push(null);
+
+  let rows = '';
+  for (let i = 0; i < cells.length; i += 5) {
+    const week = cells.slice(i, i + 5);
+    rows += '<div class="cal-row">' + week.map(d => {
+      if (!d) return '<div class="cal-cell empty"></div>';
+      const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const evs = CAL_EVENTS[dateStr] || [];
+      const isHoliday = evs.some(e => e.holiday);
+      const isToday = dateStr === '2026-05-20';
+      let cls = 'cal-cell has-date';
+      if (isHoliday) cls += ' holiday';
+      if (isToday) cls += ' today';
+      const evHTML = evs.map(e => `<div class="cal-ev ${e.cls}" title="${e.text}">${e.text}</div>`).join('');
+      return `<div class="${cls}"><div class="cal-dn">${d}</div>${evHTML}</div>`;
+    }).join('') + '</div>';
+  }
+
+  return `
+    <div class="cal-month">
+      <div class="cal-mhd">
+        <span>${label}</span>
+        <span class="cal-mhd-sub">${sub}</span>
+      </div>
+      <div class="cal-whd">
+        ${['월','화','수','목','금'].map(d => `<div class="cal-wd">${d}</div>`).join('')}
+      </div>
+      <div class="cal-body">${rows}</div>
+    </div>
+  `;
+}
+
+// ─────────────────────────────────────
+// CHECKLIST
+// ─────────────────────────────────────
+function loadChecklistState() {
+  try { return JSON.parse(localStorage.getItem('checklist_t50') || '{}'); } catch { return {}; }
+}
+
+function saveChecklistState(state) {
+  localStorage.setItem('checklist_t50', JSON.stringify(state));
+}
+
+function renderChecklist() {
+  const state = loadChecklistState();
+  const meta = getChecklistMeta();
+  const container = document.getElementById('checklistContainer');
+  container.innerHTML = CHECKLIST.map(phase => {
+    const items = phase.items.map(item => {
+      const ov = meta[item.id] || {};
+      const isDone = state[item.id] !== undefined ? state[item.id] : item.done;
+      return { ...item, ...ov, done: isDone };
+    });
+    const doneCount = items.filter(i => i.done).length;
+    const total = items.length;
+    const pct = total ? Math.round(doneCount / total * 100) : 0;
+
+    const itemsHTML = items.map(item => `
+      <div class="cl-item ${item.done ? 'done' : ''}" id="cli-${item.id}">
+        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleItem('${item.id}', this.checked)">
+        <div class="cl-icnt">
+          <div class="cl-itxt">${item.text}</div>
+          <div class="cl-imeta">
+            ${item.owner ? `<span class="cl-itag it-own">${item.owner}</span>` : ''}
+            ${item.timing ? `<span class="cl-itag it-tim">D: ${item.timing}</span>` : ''}
+            ${item.note ? `<span class="cl-itag it-nt">${item.note}</span>` : ''}
+          </div>
+        </div>
+        <div class="cl-item-acts">
+          <button class="btn-icon btn-edit-ic" onclick="openEditChecklistItem('${phase.id}','${item.id}')" title="수정"><i data-lucide="pencil"></i></button>
+        </div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="cl-phase" id="phase-${phase.id}">
+        <div class="cl-phd" onclick="togglePhase('${phase.id}')">
+          <div class="cl-ptitl">
+            <span class="toggle-ico open" id="tgl-${phase.id}">▼</span>
+            <span>${phase.title}</span>
+          </div>
+          <div class="cl-pprog">
+            <span>${doneCount}/${total}</span>
+            <div class="pbar"><div class="pfill" id="pfill-${phase.id}" style="width:${pct}%"></div></div>
+            <span>${pct}%</span>
+          </div>
+        </div>
+        <div class="cl-items" id="pitems-${phase.id}">${itemsHTML}</div>
+      </div>
+    `;
+  }).join('');
+  lucide.createIcons();
+}
+
+function toggleItem(id, checked) {
+  const state = loadChecklistState();
+  state[id] = checked;
+  saveChecklistState(state);
+  const row = document.getElementById('cli-' + id);
+  if (row) row.classList.toggle('done', checked);
+  updatePhaseProgress(id.split('_')[0]);
+}
+
+function updatePhaseProgress(phaseId) {
+  const state = loadChecklistState();
+  const phase = CHECKLIST.find(p => p.id === phaseId);
+  if (!phase) return;
+  const items = phase.items.map(i => state[i.id] !== undefined ? state[i.id] : i.done);
+  const done = items.filter(Boolean).length;
+  const pct = items.length ? Math.round(done / items.length * 100) : 0;
+  const fill = document.getElementById('pfill-' + phaseId);
+  if (fill) fill.style.width = pct + '%';
+  const phd = document.querySelector(`#phase-${phaseId} .cl-pprog`);
+  if (phd) {
+    phd.querySelectorAll('span')[0].textContent = done + '/' + items.length;
+    phd.querySelectorAll('span')[2].textContent = pct + '%';
+  }
+}
+
+function togglePhase(phaseId) {
+  const items = document.getElementById('pitems-' + phaseId);
+  const ico = document.getElementById('tgl-' + phaseId);
+  const hd = document.querySelector(`#phase-${phaseId} .cl-phd`);
+  const collapsed = items.classList.toggle('hidden');
+  ico.classList.toggle('open', !collapsed);
+  if (hd) hd.classList.toggle('collapsed-hd', collapsed);
+}
+
+// ─────────────────────────────────────
+// RESOURCES
+// ─────────────────────────────────────
+function getResources() {
+  try { return JSON.parse(localStorage.getItem('resources_t50') || 'null') || getDefaultResources(); } catch { return getDefaultResources(); }
+}
+
+function getDefaultResources() {
+  return [
+    { id: 'r1', icon: '📄', name: 'T50 2세대 마스터 가이드', desc: 'PPT 교육 자료 (상품기획팀)', url: '', date: '2026-05-20' },
+    { id: 'r2', icon: '🎬', name: '조립 / 분해 영상', desc: '시공팀·AS 엔지니어 교육용 영상', url: '', date: '' },
+    { id: 'r3', icon: '', name: '사전 Q&A 문서', desc: '각 MOT별 사전 취합 질의응답', url: '', date: '' },
+    { id: 'r4', icon: '📑', name: '교육 품의서', desc: '고객접점 인원 대상 신제품 교육 진행 관련', url: '', date: '' }
+  ];
+}
+
+function saveResources(resources) {
+  localStorage.setItem('resources_t50', JSON.stringify(resources));
+}
+
+function renderResources() {
+  const resources = getResources();
+  const list = document.getElementById('resourceList');
+  if (resources.length === 0) {
+    list.innerHTML = '<div class="empty-state">아직 등록된 자료가 없습니다.<br>아래 버튼으로 추가해주세요.</div>';
+    return;
+  }
+  list.innerHTML = resources.map(r => `
+    <div class="res-item" id="res-${r.id}">
+      <div class="res-ico">${r.icon}</div>
+      <div class="res-info">
+        <div class="res-name">${r.name}</div>
+        <div class="res-desc">${r.desc}${r.date ? ' · ' + r.date : ''}</div>
+      </div>
+      <div class="res-acts">
+        ${r.url
+          ? `<a href="${r.url}" target="_blank" class="btn btn-lnk btn-sm">링크 열기 ↗</a>`
+          : `<button class="btn btn-ghost btn-sm" disabled style="cursor:default">링크 없음</button>`}
+        <button class="btn-icon btn-edit-ic" onclick="openEditResource('${r.id}')" title="수정"><i data-lucide="pencil"></i></button>
+        <button class="btn btn-err btn-sm" onclick="removeResource('${r.id}')">삭제</button>
+      </div>
+    </div>
+  `).join('');
+  lucide.createIcons();
+}
+
+function addResource() {
+  const name = document.getElementById('res-name').value.trim();
+  const desc = document.getElementById('res-desc').value.trim();
+  const url = document.getElementById('res-url').value.trim();
+  const icon = document.getElementById('res-type').value;
+  if (!name) { alert('자료명을 입력해주세요.'); return; }
+  const resources = getResources();
+  resources.push({ id: 'r' + Date.now(), icon, name, desc, url, date: new Date().toISOString().slice(0,10) });
+  saveResources(resources);
+  renderResources();
+  closeModal('modal-add-resource');
+  ['res-name','res-desc','res-url'].forEach(id => document.getElementById(id).value = '');
+}
+
+function removeResource(id) {
+  if (!confirm('자료를 삭제하시겠습니까?')) return;
+  const resources = getResources().filter(r => r.id !== id);
+  saveResources(resources);
+  renderResources();
+}
+
+// ─────────────────────────────────────
+// ATTENDEES
+// ─────────────────────────────────────
+function getAttendees() {
+  try { return JSON.parse(localStorage.getItem('attendees_t50') || '[]'); } catch { return []; }
+}
+
+function saveAttendees(atts) {
+  localStorage.setItem('attendees_t50', JSON.stringify(atts));
+}
+
+function renderAttendees() {
+  const atts = getAttendees();
+  const tbody = document.getElementById('attendeeBody');
+  if (atts.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">참석자를 추가해주세요.</td></tr>';
+  } else {
+    const targetColors = { '매장':'tg-yw','시공팀':'tg-gn','컨택센터':'tg-bl','AS엔지니어':'tg-pp','본사':'tg-pk' };
+    tbody.innerHTML = atts.map((a, i) => `
+      <tr>
+        <td class="text-muted">${i + 1}</td>
+        <td><b>${a.name}</b></td>
+        <td>${a.store || '-'}</td>
+        <td>${a.phone || '-'}</td>
+        <td><span class="tag ${a.type === '현장' ? 'tg-gn' : 'tg-bl'}">${a.type}</span></td>
+        <td><span class="tag ${targetColors[a.target] || 'tg-gy'}">${a.target}</span></td>
+        <td style="white-space:nowrap">
+          <button class="btn-icon btn-edit-ic" style="margin-right:3px" onclick="openEditAttendee('${a.id}')" title="수정"><i data-lucide="pencil"></i></button>
+          <button class="btn-icon btn-del-ic" onclick="removeAttendee('${a.id}')" title="삭제"><i data-lucide="trash-2"></i></button>
+        </td>
+      </tr>
+    `).join('');
+  }
+  updateAttendeeSummary(atts);
+  lucide.createIcons();
+}
+
+function updateAttendeeSummary(atts) {
+  document.getElementById('totalCount').textContent = atts.length;
+  document.getElementById('onsiteCount').textContent = atts.filter(a => a.type === '현장').length;
+  document.getElementById('onlineCount').textContent = atts.filter(a => a.type === '화상').length;
+}
+
+function addAttendee() {
+  const name = document.getElementById('att-name').value.trim();
+  if (!name) { alert('이름을 입력해주세요.'); return; }
+  const atts = getAttendees();
+  atts.push({
+    id: 'a' + Date.now(),
+    name,
+    store: document.getElementById('att-store').value.trim(),
+    phone: document.getElementById('att-phone').value.trim(),
+    type: document.getElementById('att-type').value,
+    target: document.getElementById('att-target').value
+  });
+  saveAttendees(atts);
+  renderAttendees();
+  closeModal('modal-add-attendee');
+  ['att-name','att-store','att-phone'].forEach(id => document.getElementById(id).value = '');
+}
+
+function removeAttendee(id) {
+  if (!confirm('참석자를 삭제하시겠습니까?')) return;
+  saveAttendees(getAttendees().filter(a => a.id !== id));
+  renderAttendees();
+}
+
+// ─────────────────────────────────────
+// REVIEW
+// ─────────────────────────────────────
+function initStarRatings() {
+  ['satisfaction','understanding','delivery','material'].forEach(key => {
+    const container = document.getElementById('stars-' + key);
+    if (!container) return;
+    for (let i = 1; i <= 5; i++) {
+      const star = document.createElement('span');
+      star.className = 'star';
+      star.textContent = '★';
+      star.dataset.val = i;
+      star.addEventListener('click', () => {
+        setStarRating(key, i);
+        saveReview();
+      });
+      star.addEventListener('mouseenter', () => highlightStars(key, i));
+      star.addEventListener('mouseleave', () => renderStars(key, getReview()['star_' + key] || 0));
+      container.appendChild(star);
+    }
+  });
+}
+
+function setStarRating(key, val) {
+  const review = getReview();
+  review['star_' + key] = val;
+  saveReviewData(review);
+  renderStars(key, val);
+  document.getElementById('score-' + key).textContent = val + '점';
+}
+
+function highlightStars(key, val) {
+  const container = document.getElementById('stars-' + key);
+  if (!container) return;
+  container.querySelectorAll('.star').forEach(s => {
+    s.classList.toggle('on', parseInt(s.dataset.val) <= val);
+  });
+}
+
+function renderStars(key, val) {
+  const container = document.getElementById('stars-' + key);
+  if (!container) return;
+  container.querySelectorAll('.star').forEach(s => {
+    s.classList.toggle('on', parseInt(s.dataset.val) <= val);
+  });
+  const scoreEl = document.getElementById('score-' + key);
+  if (scoreEl) scoreEl.textContent = val ? val + '점' : '-점';
+}
+
+function getReview() {
+  try { return JSON.parse(localStorage.getItem('review_t50') || '{}'); } catch { return {}; }
+}
+
+function saveReviewData(data) {
+  localStorage.setItem('review_t50', JSON.stringify(data));
+}
+
+function saveReview() {
+  const review = getReview();
+  ['survey','qa','debrief','improve','final'].forEach(key => {
+    const el = document.getElementById('review-' + key);
+    if (el) review['text_' + key] = el.value;
+  });
+  saveReviewData(review);
+  const badge = document.getElementById('reviewSavedBadge');
+  if (badge) { badge.style.display = 'inline'; setTimeout(() => badge.style.display = 'none', 2000); }
+}
+
+function loadReview() {
+  const review = getReview();
+  ['survey','qa','debrief','improve','final'].forEach(key => {
+    const el = document.getElementById('review-' + key);
+    if (el && review['text_' + key]) el.value = review['text_' + key];
+  });
+  ['satisfaction','understanding','delivery','material'].forEach(key => {
+    const val = review['star_' + key] || 0;
+    renderStars(key, val);
+  });
+}
+
+// ─────────────────────────────────────
+// MODAL
+// ─────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function handleModalClick(event, id) {
+  if (event.target.id === id) closeModal(id);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-ov.open').forEach(m => m.classList.remove('open'));
+});
+
+// ─────────────────────────────────────
+// ADD PRODUCT
+// ─────────────────────────────────────
+function addProduct() {
+  const name = document.getElementById('prod-name').value.trim();
+  if (!name) { alert('제품명을 입력해주세요.'); return; }
+  const id = 'prod_' + Date.now();
+  const tab = document.createElement('button');
+  tab.className = 'nav-tab';
+  tab.dataset.page = id;
+  tab.textContent = name;
+  tab.onclick = () => alert('이 페이지는 기본 템플릿을 복사하여 생성할 수 있습니다.\n현재 버전에서는 T50 2세대 페이지가 템플릿입니다.');
+  const addBtn = document.querySelector('.nav-tab-add');
+  document.getElementById('navTabs').insertBefore(tab, addBtn);
+  closeModal('modal-add-product');
+  document.getElementById('prod-name').value = '';
+  document.getElementById('prod-launch').value = '';
+}
+
+// ─────────────────────────────────────
+// STORAGE LOAD
+// ─────────────────────────────────────
+function loadFromStorage() {
+  renderGoals();
+  renderSchedule();
+  renderAllCurriculumTabs();
+  renderResources();
+  renderAttendees();
+  loadReview();
+}
+
+// ─────────────────────────────────────
+// STATE
+// ─────────────────────────────────────
+let editingGoalId = null, editingScheduleId = null, editingCurriculumTab = null, editingCurriculumId = null;
+let editingAttendeeId = null, editingResourceId = null, editingChecklistItemId = null;
+
+// ─────────────────────────────────────
+// GOALS
+// ─────────────────────────────────────
+const GOALS_DEFAULT = [
+  { id:'g1', label:'Goal 01 · 전문성', text:'고객 구매 여정의 MOT 접점인 <b>시공팀, 컨택센터 상담사, 매장 직원</b>이 T50 2세대에 대한 응대를 전문성 있게 할 수 있도록 한다.' },
+  { id:'g2', label:'Goal 02 · 일관성', text:'시공팀·컨택센터에서 고객 응대 시 <b>일관된 메시지를 전달</b>하고 만족할 수 있는 고객 경험을 만들어낼 수 있도록 한다.' },
+  { id:'g3', label:'Goal 03 · 개선', text:'<b>상품기획 및 연구소</b>가 시공·컨택센터 교육을 통해 제품·서비스에서 개선할 부분을 파악하고 이를 업무에 적용한다.' }
+];
+function getGoals() { try { return JSON.parse(localStorage.getItem('goals_t50')||'null') || JSON.parse(JSON.stringify(GOALS_DEFAULT)); } catch { return JSON.parse(JSON.stringify(GOALS_DEFAULT)); } }
+function saveGoalsData(g) { localStorage.setItem('goals_t50', JSON.stringify(g)); }
+function renderGoals() {
+  const goals = getGoals(), grid = document.getElementById('goalsGrid');
+  if (!grid) return;
+  if (!goals.length) { grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">교육 목표를 추가해주세요.</div>'; return; }
+  grid.innerHTML = goals.map(g => `
+    <div class="goal-card">
+      <div class="goal-acts">
+        <button class="btn-icon btn-edit-ic" onclick="openEditGoal('${g.id}')" title="수정"><i data-lucide="pencil"></i></button>
+        <button class="btn-icon btn-del-ic" onclick="removeGoal('${g.id}')" title="삭제"><i data-lucide="trash-2"></i></button>
+      </div>
+      <div class="goal-n">${g.label}</div>
+      <div class="goal-txt">${g.text}</div>
+    </div>`).join('');
+  lucide.createIcons();
+}
+function openEditGoal(id) {
+  editingGoalId = id;
+  document.getElementById('goal-modal-ttl').textContent = id ? '교육 목표 수정' : '교육 목표 추가';
+  document.getElementById('goal-save-btn').textContent = id ? '저장' : '추가';
+  if (id) { const g = getGoals().find(x=>x.id===id)||{}; document.getElementById('goal-label').value=g.label||''; document.getElementById('goal-text').value=(g.text||'').replace(/<\/?b>/g,''); }
+  else { document.getElementById('goal-label').value=''; document.getElementById('goal-text').value=''; }
+  openModal('modal-add-goal');
+}
+function saveGoalEdit() {
+  const label=document.getElementById('goal-label').value.trim(), text=document.getElementById('goal-text').value.trim();
+  if (!label||!text) { alert('제목과 내용을 입력해주세요.'); return; }
+  const goals=getGoals();
+  if (editingGoalId) { const i=goals.findIndex(g=>g.id===editingGoalId); if(i>-1){goals[i].label=label;goals[i].text=text;} }
+  else goals.push({id:'g'+Date.now(),label,text});
+  saveGoalsData(goals); renderGoals(); closeModal('modal-add-goal');
+}
+function removeGoal(id) { if(!confirm('목표를 삭제하시겠습니까?'))return; saveGoalsData(getGoals().filter(g=>g.id!==id)); renderGoals(); }
+
+// ─────────────────────────────────────
+// SCHEDULE
+// ─────────────────────────────────────
+const SCHEDULE_DEFAULT = [
+  {id:'s1',typeCls:'tg-yw',typeName:'매장 직원',name:'매장 인원 교육',date:'2026년 5월 26일 (화)',time:'14:00 ~ 16:00',duration:'2h',location:'본사 311홀',instructors:'이윤주 · 서지원 · 권소현',attendees:'취합 중'},
+  {id:'s2',typeCls:'tg-gn',typeName:'시공팀',name:'시공팀 교육',date:'2026년 5월 26일 (화)',time:'05:30 ~ 06:30',duration:'1h',location:'퍼시스 안성공장 본관 3층 교육실',instructors:'이윤주 · 고태진 · 정규식 · 황인우 · 백광열',attendees:'시공팀 35명 (권역장 3명 포함)'},
+  {id:'s3',typeCls:'tg-pp',typeName:'AS 엔지니어',name:'AS엔지니어팀 교육',date:'2026년 9월 17일 (수)',time:'16:30 ~ 17:30',duration:'1h',location:'본사 7A',instructors:'이윤주 · 고태진 · 정규식 · 황인우',attendees:'AS엔지니어팀 6명 (권역장 1명 포함)'},
+  {id:'s4',typeCls:'tg-bl',typeName:'컨택센터',name:'컨택센터 상담인원 교육',date:'2026년 9월 19일 (금)',time:'17:40 ~ 19:10',duration:'1.5h',location:'경기도 성남시 수정구 산성대로 223, 9층 ICS',instructors:'이윤주 · 고태진 · 정규식',attendees:'서비스 7명 · 구매상담 3명 (총 10명)'}
+];
+function getSchedule() { try { return JSON.parse(localStorage.getItem('schedule_t50')||'null')||JSON.parse(JSON.stringify(SCHEDULE_DEFAULT)); } catch { return JSON.parse(JSON.stringify(SCHEDULE_DEFAULT)); } }
+function saveScheduleData(r) { localStorage.setItem('schedule_t50', JSON.stringify(r)); }
+function renderSchedule() {
+  const rows=getSchedule(), el=document.getElementById('scheduleContainer');
+  if (!el) return;
+  if (!rows.length) { el.innerHTML='<div class="empty-state">일정을 추가해주세요.</div>'; return; }
+  el.innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr><th>교육명</th><th>일정</th><th>시간</th><th>장소</th><th>교육 담당</th><th>대상/인원</th><th></th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td><span class="tag ${r.typeCls}">${r.typeName}</span><br><b style="display:block;margin-top:4px">${r.name}</b></td>
+      <td>${r.date}</td>
+      <td>${r.time}<br><span class="text-muted text-sm">${r.duration}</span></td>
+      <td>${r.location}</td><td>${r.instructors}</td><td>${r.attendees}</td>
+      <td style="white-space:nowrap;padding:8px">
+        <button class="btn-icon btn-edit-ic" style="margin-right:3px" onclick="openEditSchedule('${r.id}')" title="수정"><i data-lucide="pencil"></i></button>
+        <button class="btn-icon btn-del-ic" onclick="removeScheduleRow('${r.id}')" title="삭제"><i data-lucide="trash-2"></i></button>
+      </td></tr>`).join('')}
+    </tbody></table></div>`;
+  lucide.createIcons();
+}
+function openEditSchedule(id) {
+  editingScheduleId=id;
+  document.getElementById('sch-modal-ttl').textContent=id?'일정 수정':'일정 추가';
+  document.getElementById('sch-save-btn').textContent=id?'저장':'추가';
+  if (id) { const r=getSchedule().find(x=>x.id===id)||{};
+    document.getElementById('sch-type').value=(r.typeCls||'tg-yw')+'|'+(r.typeName||'');
+    ['name','date','time','duration','location','instructors','attendees'].forEach(k=>document.getElementById('sch-'+k).value=r[k]||'');
+  } else { ['name','date','time','duration','location','instructors','attendees'].forEach(k=>document.getElementById('sch-'+k).value=''); }
+  openModal('modal-add-schedule');
+}
+function saveScheduleEdit() {
+  const tv=document.getElementById('sch-type').value.split('|'), name=document.getElementById('sch-name').value.trim();
+  if (!name){alert('교육명을 입력해주세요.');return;}
+  const row={typeCls:tv[0],typeName:tv[1],name,date:document.getElementById('sch-date').value.trim(),time:document.getElementById('sch-time').value.trim(),duration:document.getElementById('sch-duration').value.trim(),location:document.getElementById('sch-location').value.trim(),instructors:document.getElementById('sch-instructors').value.trim(),attendees:document.getElementById('sch-attendees').value.trim()};
+  const rows=getSchedule();
+  if(editingScheduleId){const i=rows.findIndex(r=>r.id===editingScheduleId);if(i>-1)rows[i]={...rows[i],...row};}
+  else rows.push({id:'s'+Date.now(),...row});
+  saveScheduleData(rows); renderSchedule(); closeModal('modal-add-schedule');
+}
+function removeScheduleRow(id){if(!confirm('일정을 삭제하시겠습니까?'))return;saveScheduleData(getSchedule().filter(r=>r.id!==id));renderSchedule();}
+
+// ─────────────────────────────────────
+// CURRICULUM
+// ─────────────────────────────────────
+const CURRICULUM_DEFAULT = {
+  common:[
+    {id:'cc1',content:'제품 소개',detail:'제품 기획 의도, 특장점',duration:'15분',material:'제품 마스터가이드',instructor:'이윤주'},
+    {id:'cc2',content:'Q&A',detail:'제품 관련 취합 질문에 대한 응답',duration:'10분',material:'-',instructor:'이윤주 · 고태진 · 정규식'},
+    {id:'cc3',content:'제품 조립',detail:'제품 조립 시연 및 실제 조립',duration:'20분',material:'조립 가이드',instructor:'고태진 · 정규식'},
+    {id:'cc4',content:'현장 질의응답',detail:'교육 현장에서 발생하는 질문에 대한 응답',duration:'15분',material:'-',instructor:'고태진 · 정규식'},
+    {id:'cc5',content:'체험',detail:'의자 직접 체험',duration:'남은 시간',material:'-',instructor:'-'}
+  ],
+  store:[
+    {id:'cs1',content:'T50 세션',detail:'공통 교육 커리큘럼 진행 (제품 소개 → 조립 → Q&A → 체험)',duration:'1시간',instructor:'이윤주 · 고태진 · 정규식'},
+    {id:'cs2',content:'전체 Q&A',detail:'제품 관련 다양한 질문에 대한 응답 시간 (시디즈 전 제품)',duration:'1시간 30분',instructor:'이윤주 · 이종화 · 곽유진 · 고태진 · 정규식'}
+  ],
+  install:[
+    {id:'ci1',content:'T50 세션',detail:'공통 교육 커리큘럼 진행',duration:'30분',instructor:'이윤주 · 고태진 · 정규식'},
+    {id:'ci2',content:'시공 실습',detail:'제품 조립 시 파손 리스크 및 하자 예방법 / AS 부위별 교체 방법 실습',duration:'30분',instructor:'고태진 · 정규식 · 황인우'}
+  ],
+  contact:[
+    {id:'cn1',content:'T50 세션',detail:'공통 교육 커리큘럼 진행',duration:'40분',instructor:'이윤주 · 고태진 · 정규식'},
+    {id:'cn2',content:'상담 Q&A',detail:'고객 상담 시나리오별 응답 방법 / 박스 크기, 소재·마감재 고객 우려사항',duration:'50분',instructor:'이윤주 · 고태진'}
+  ],
+  as:[
+    {id:'ca1',content:'T50 세션',detail:'공통 교육 커리큘럼 진행',duration:'30분',instructor:'이윤주 · 고태진 · 정규식'},
+    {id:'ca2',content:'AS 실습',detail:'AS 부위별 교체 방법 실습 (약 1시간 실습 필요)',duration:'60분',instructor:'고태진 · 정규식 · 황인우'}
+  ]
+};
+function getCurriculum(){try{return JSON.parse(localStorage.getItem('curriculum_t50')||'null')||JSON.parse(JSON.stringify(CURRICULUM_DEFAULT));}catch{return JSON.parse(JSON.stringify(CURRICULUM_DEFAULT));}}
+function saveCurriculumData(d){localStorage.setItem('curriculum_t50',JSON.stringify(d));}
+function renderCurriculumTab(tab){
+  const data=getCurriculum(),rows=data[tab]||[],el=document.getElementById('curr-'+tab+'-tbl');
+  if(!el)return;
+  const isCm=tab==='common';
+  el.innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr><th>내용</th><th>상세 내용</th><th>소요 시간</th>${isCm?'<th>자료</th>':''}<th>강사</th><th></th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td><b>${r.content}</b></td><td>${r.detail}</td><td>${r.duration}</td>${isCm?`<td>${r.material||'-'}</td>`:''}
+      <td>${r.instructor}</td>
+      <td style="white-space:nowrap;padding:8px">
+        <button class="btn-icon btn-edit-ic" style="margin-right:3px" onclick="openEditCurriculum('${tab}','${r.id}')" title="수정"><i data-lucide="pencil"></i></button>
+        <button class="btn-icon btn-del-ic" onclick="removeCurriculumRow('${tab}','${r.id}')" title="삭제"><i data-lucide="trash-2"></i></button>
+      </td></tr>`).join('')}
+    </tbody></table></div>`;
+  lucide.createIcons();
+}
+function renderAllCurriculumTabs(){['common','store','install','contact','as'].forEach(renderCurriculumTab);}
+function openEditCurriculum(tab,id){
+  editingCurriculumTab=tab;editingCurriculumId=id;
+  document.getElementById('cur-modal-ttl').textContent=id?'항목 수정':'항목 추가';
+  document.getElementById('cur-save-btn').textContent=id?'저장':'추가';
+  document.getElementById('cur-material-row').style.display=tab==='common'?'':'none';
+  if(id){const r=(getCurriculum()[tab]||[]).find(x=>x.id===id)||{};
+    document.getElementById('cur-content').value=r.content||'';
+    document.getElementById('cur-detail').value=r.detail||'';
+    document.getElementById('cur-duration').value=r.duration||'';
+    document.getElementById('cur-instructor').value=r.instructor||'';
+    document.getElementById('cur-material').value=r.material||'';
+  } else {['cur-content','cur-detail','cur-duration','cur-instructor','cur-material'].forEach(x=>document.getElementById(x).value='');}
+  openModal('modal-add-curriculum');
+}
+function saveCurriculumEdit(){
+  const content=document.getElementById('cur-content').value.trim();
+  if(!content){alert('내용을 입력해주세요.');return;}
+  const row={content,detail:document.getElementById('cur-detail').value.trim(),duration:document.getElementById('cur-duration').value.trim(),instructor:document.getElementById('cur-instructor').value.trim(),material:document.getElementById('cur-material').value.trim()};
+  const data=getCurriculum();
+  if(!data[editingCurriculumTab])data[editingCurriculumTab]=[];
+  if(editingCurriculumId){const i=data[editingCurriculumTab].findIndex(r=>r.id===editingCurriculumId);if(i>-1)data[editingCurriculumTab][i]={...data[editingCurriculumTab][i],...row};}
+  else data[editingCurriculumTab].push({id:'c'+Date.now(),...row});
+  saveCurriculumData(data);renderCurriculumTab(editingCurriculumTab);closeModal('modal-add-curriculum');
+}
+function removeCurriculumRow(tab,id){if(!confirm('항목을 삭제하시겠습니까?'))return;const d=getCurriculum();d[tab]=(d[tab]||[]).filter(r=>r.id!==id);saveCurriculumData(d);renderCurriculumTab(tab);}
+
+// ─────────────────────────────────────
+// RESOURCES (edit support)
+// ─────────────────────────────────────
+function openEditResource(id){
+  editingResourceId=id;
+  document.getElementById('res-modal-ttl').textContent=id?'자료 수정':'자료 추가';
+  document.getElementById('res-save-btn').textContent=id?'저장':'추가';
+  if(id){const r=getResources().find(x=>x.id===id)||{};document.getElementById('res-name').value=r.name||'';document.getElementById('res-desc').value=r.desc||'';document.getElementById('res-url').value=r.url||'';document.getElementById('res-type').value=r.icon||'📄';}
+  else{['res-name','res-desc','res-url'].forEach(x=>document.getElementById(x).value='');}
+  openModal('modal-add-resource');
+}
+function saveResourceEdit(){
+  const name=document.getElementById('res-name').value.trim();
+  if(!name){alert('자료명을 입력해주세요.');return;}
+  const resources=getResources();
+  const obj={name,desc:document.getElementById('res-desc').value.trim(),url:document.getElementById('res-url').value.trim(),icon:document.getElementById('res-type').value};
+  if(editingResourceId){const i=resources.findIndex(r=>r.id===editingResourceId);if(i>-1)resources[i]={...resources[i],...obj};}
+  else resources.push({id:'r'+Date.now(),...obj,date:new Date().toISOString().slice(0,10)});
+  saveResources(resources);renderResources();closeModal('modal-add-resource');
+}
+
+// ─────────────────────────────────────
+// ATTENDEES (edit support)
+// ─────────────────────────────────────
+function openEditAttendee(id){
+  editingAttendeeId=id;
+  document.getElementById('att-modal-ttl').textContent=id?'참석자 수정':'참석자 추가';
+  document.getElementById('att-save-btn').textContent=id?'저장':'추가';
+  if(id){const a=getAttendees().find(x=>x.id===id)||{};document.getElementById('att-name').value=a.name||'';document.getElementById('att-store').value=a.store||'';document.getElementById('att-phone').value=a.phone||'';document.getElementById('att-type').value=a.type||'현장';document.getElementById('att-target').value=a.target||'매장';}
+  else{['att-name','att-store','att-phone'].forEach(x=>document.getElementById(x).value='');}
+  openModal('modal-add-attendee');
+}
+function saveAttendeeEdit(){
+  const name=document.getElementById('att-name').value.trim();
+  if(!name){alert('이름을 입력해주세요.');return;}
+  const atts=getAttendees();
+  const obj={name,store:document.getElementById('att-store').value.trim(),phone:document.getElementById('att-phone').value.trim(),type:document.getElementById('att-type').value,target:document.getElementById('att-target').value};
+  if(editingAttendeeId){const i=atts.findIndex(a=>a.id===editingAttendeeId);if(i>-1)atts[i]={...atts[i],...obj};}
+  else atts.push({id:'a'+Date.now(),...obj});
+  saveAttendees(atts);renderAttendees();closeModal('modal-add-attendee');
+  ['att-name','att-store','att-phone'].forEach(x=>document.getElementById(x).value='');
+}
+
+// ─────────────────────────────────────
+// CHECKLIST ITEM EDIT
+// ─────────────────────────────────────
+function getChecklistMeta(){try{return JSON.parse(localStorage.getItem('checklist_meta_t50')||'{}');}catch{return {};}}
+function saveChecklistMeta(m){localStorage.setItem('checklist_meta_t50',JSON.stringify(m));}
+function openEditChecklistItem(phaseId,itemId){
+  editingChecklistItemId=itemId;
+  const meta=getChecklistMeta(), phase=CHECKLIST.find(p=>p.id===phaseId), item=phase&&phase.items.find(i=>i.id===itemId);
+  if(!item)return;
+  const ov=meta[itemId]||{};
+  document.getElementById('cli-text').value=ov.text!==undefined?ov.text:item.text;
+  document.getElementById('cli-owner').value=ov.owner!==undefined?ov.owner:(item.owner||'');
+  document.getElementById('cli-timing').value=ov.timing!==undefined?ov.timing:(item.timing||'');
+  document.getElementById('cli-note').value=ov.note!==undefined?ov.note:(item.note||'');
+  openModal('modal-edit-checklist');
+}
+function saveChecklistItemEdit(){
+  const text=document.getElementById('cli-text').value.trim();
+  if(!text){alert('항목 내용을 입력해주세요.');return;}
+  const meta=getChecklistMeta();
+  meta[editingChecklistItemId]={text,owner:document.getElementById('cli-owner').value.trim(),timing:document.getElementById('cli-timing').value.trim(),note:document.getElementById('cli-note').value.trim()};
+  saveChecklistMeta(meta);renderChecklist();closeModal('modal-edit-checklist');
+}
+</script>
+</body>
+</html>
