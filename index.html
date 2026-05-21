@@ -91,6 +91,9 @@ body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI','Malgu
 .cal-ev:hover{opacity:.8}
 .cal-add-hint{font-size:9px;color:var(--muted);margin-top:2px;opacity:0;text-align:center}
 .cal-cell.has-date:hover .cal-add-hint{opacity:1}
+.cal-dday{display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;background:#1E40AF;color:#fff;margin-bottom:3px;letter-spacing:.3px}
+.cal-dday.is-launch{background:#DC2626}
+.cal-dday.is-past{background:#9CA3AF}
 
 /* TABLE */
 .tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh)}
@@ -699,6 +702,10 @@ create policy "Allow all" on app_data
           <button class="cal-nav-btn" onclick="calNav(-1)">◀</button>
           <span class="cal-ctrl-lbl" id="calRangeLabel"></span>
           <button class="cal-nav-btn" onclick="calNav(1)">▶</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap">📦 출시일</label>
+          <input type="date" id="launchDateInput" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)" onchange="saveLaunchDate(this.value)">
         </div>
         <button class="btn btn-ghost btn-sm" onclick="calNavToday()">오늘로</button>
       </div>
@@ -1440,6 +1447,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateSectionNav('t50');
   lucide.createIcons();
   await initFromSupabase();   // Supabase에서 모든 데이터 로드
+  const launchEl = document.getElementById('launchDateInput');
+  if (launchEl) launchEl.value = getLaunchDate();
   renderCalendar();
   renderChecklist();
   loadFromStorage();           // renderGoals, renderSchedule, 등 모두 호출
@@ -1512,6 +1521,13 @@ function switchTab(group, id) {
 // ─────────────────────────────────────
 function getCalEvents() { return dbGet('cal_events') || JSON.parse(JSON.stringify(CAL_EVENTS)); }
 function saveCalEventsData(evs) { dbSet('cal_events', evs); }
+function getLaunchDate() { return dbGet('launch_date') || ''; }
+function saveLaunchDate(val) {
+  dbSet('launch_date', val);
+  const el = document.getElementById('launchDateInput');
+  if (el) el.value = val;
+  renderCalendar();
+}
 
 function calNav(dir) {
   calMonth += dir;
@@ -1538,6 +1554,8 @@ function renderCalendar() {
 
 function renderMonth({ year, month }) {
   const evs = getCalEvents();
+  const launchDate = getLaunchDate();
+  const launchMs = launchDate ? new Date(launchDate).setHours(0,0,0,0) : null;
   const label = `${year}년 ${MONTH_KO[month-1]}`;
   const firstDay = new Date(year, month - 1, 1).getDay();
   const offset = firstDay === 0 ? 6 : firstDay - 1;
@@ -1563,11 +1581,22 @@ function renderMonth({ year, month }) {
       let cls = 'cal-cell has-date';
       if (isHoliday) cls += ' holiday';
       if (isToday)   cls += ' today';
+
+      let ddayHTML = '';
+      if (launchMs !== null && dayEvs.length > 0) {
+        const diff = Math.round((new Date(dateStr).setHours(0,0,0,0) - launchMs) / 86400000);
+        let label, ddayCls;
+        if (diff === 0)      { label = 'D-DAY'; ddayCls = 'cal-dday is-launch'; }
+        else if (diff < 0)   { label = `D${diff}`;  ddayCls = 'cal-dday'; }
+        else                 { label = `D+${diff}`; ddayCls = 'cal-dday is-past'; }
+        ddayHTML = `<div class="${ddayCls}">${label}</div>`;
+      }
+
       const evHTML = dayEvs.map((e, idx) =>
         `<div class="cal-ev ${e.cls}" title="${e.text}" onclick="event.stopPropagation();openEditCalEvent('${dateStr}',${idx})">${e.text}</div>`
       ).join('');
       return `<div class="${cls}" onclick="openAddCalEvent('${dateStr}')">
-        <div class="cal-dn">${d}</div>${evHTML}
+        <div class="cal-dn">${d}</div>${ddayHTML}${evHTML}
         <div class="cal-add-hint">+ 추가</div>
       </div>`;
     }).join('') + '</div>';
