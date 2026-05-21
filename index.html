@@ -274,8 +274,32 @@ input:focus,select:focus{border-color:var(--pri)}
     <button class="nav-tab active" data-page="t50" onclick="switchPage('t50')">T50 2세대</button>
     <button class="nav-tab-add" onclick="openModal('modal-add-product')">+ 제품 추가</button>
   </div>
+  <span id="dbStatus" style="font-size:11px;margin-left:8px;transition:color .3s"></span>
   <span class="nav-version">v2.0 · 2025.10.01</span>
 </nav>
+
+<!-- DB 설정 안내 오버레이 -->
+<div id="db-setup-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:14px;padding:28px;max-width:560px;width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="font-size:16px;font-weight:700;margin-bottom:10px">⚙️ Supabase 테이블 설정 필요</div>
+    <p style="font-size:13px;color:#64748B;margin-bottom:14px;line-height:1.7">아래 SQL을 Supabase 대시보드 → <b>SQL Editor</b>에서 실행 후 새로고침 해주세요.</p>
+    <pre style="background:#1E293B;color:#94A3B8;padding:16px;border-radius:8px;font-size:11px;line-height:1.8;overflow-x:auto;white-space:pre-wrap">create table if not exists app_data (
+  id uuid default gen_random_uuid() primary key,
+  product_id text not null,
+  data_key   text not null,
+  data_value jsonb,
+  updated_at timestamptz default now(),
+  constraint app_data_unique unique (product_id, data_key)
+);
+alter table app_data enable row level security;
+create policy "Allow all" on app_data
+  for all using (true) with check (true);</pre>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <a href="https://supabase.com/dashboard/project/dvlrzbckneucpvlacdll/sql/new" target="_blank" style="padding:8px 16px;background:#3B82F6;color:#fff;border-radius:7px;font-size:13px;font-weight:500;text-decoration:none">SQL Editor 열기 ↗</a>
+      <button onclick="location.reload()" style="padding:8px 16px;background:#F1F5F9;color:#64748B;border:1px solid #E2E8F0;border-radius:7px;font-size:13px;cursor:pointer">새로고침</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── SECTION NAV ── -->
 <nav class="sec-nav" id="secNav"></nav>
@@ -1158,6 +1182,64 @@ input:focus,select:focus{border-color:var(--pri)}
 
 <script>
 // ─────────────────────────────────────
+// SUPABASE
+// ─────────────────────────────────────
+const SUPABASE_URL = 'https://dvlrzbckneucpvlacdll.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2bHJ6YmNrbmV1Y3B2bGFjZGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5ODE0OTUsImV4cCI6MjA5MDU1NzQ5NX0.ofzGfyjndiT-FAIcG9TCFtUSXsagTBYOnhsP91vx0sE';
+const PRODUCT_ID   = 't50';
+const _dbH = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' };
+
+const _db = {}; // 인메모리 캐시
+
+async function initFromSupabase() {
+  showDbStatus('loading');
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/app_data?product_id=eq.${PRODUCT_ID}&select=data_key,data_value`, { headers: _dbH });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      if (err.code === '42P01' || res.status === 404) { showSetupOverlay(); return; }
+      throw new Error(res.status);
+    }
+    const rows = await res.json();
+    rows.forEach(r => { _db[r.data_key] = r.data_value; });
+    showDbStatus('ok');
+  } catch(e) {
+    console.error('Supabase init error:', e);
+    showDbStatus('error');
+  }
+}
+
+function dbGet(key) { return _db[key] !== undefined ? _db[key] : null; }
+
+let _dbSavingCount = 0, _dbStatusTimer = null;
+function dbSet(key, value) {
+  _db[key] = value;
+  _dbSavingCount++;
+  showDbStatus('saving');
+  fetch(`${SUPABASE_URL}/rest/v1/app_data`, {
+    method: 'POST',
+    headers: { ..._dbH, Prefer: 'resolution=merge-duplicates' },
+    body: JSON.stringify({ product_id: PRODUCT_ID, data_key: key, data_value: value, updated_at: new Date().toISOString() })
+  }).then(r => { if (!r.ok) throw new Error(r.status); })
+    .catch(e => { console.error('dbSet error:', e); showDbStatus('error'); })
+    .finally(() => { _dbSavingCount--; if (_dbSavingCount === 0) showDbStatus('ok'); });
+}
+
+function showDbStatus(state) {
+  const el = document.getElementById('dbStatus'); if (!el) return;
+  clearTimeout(_dbStatusTimer);
+  const cfg = { loading:['⏳ 불러오는 중','#94A3B8'], saving:['저장 중...','#F59E0B'], ok:['✓ 저장됨','#22C55E'], error:['⚠ 저장 오류','#EF4444'] }[state];
+  if (!cfg) return;
+  el.textContent = cfg[0]; el.style.color = cfg[1];
+  if (state === 'ok') _dbStatusTimer = setTimeout(() => el.textContent = '', 2500);
+}
+
+function showSetupOverlay() {
+  const el = document.getElementById('db-setup-overlay');
+  if (el) el.style.display = 'flex';
+}
+
+// ─────────────────────────────────────
 // DATA
 // ─────────────────────────────────────
 const CHECKLIST = [
@@ -1289,14 +1371,15 @@ let calEditingIdx  = null;
 // ─────────────────────────────────────
 // INIT
 // ─────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  // 캘린더: 현재 날짜 기준으로 시작
+document.addEventListener('DOMContentLoaded', async () => {
   calYear  = _today.getFullYear();
   calMonth = _today.getMonth() + 1;
+  updateSectionNav('t50');
+  lucide.createIcons();
+  await initFromSupabase();   // Supabase에서 모든 데이터 로드
   renderCalendar();
   renderChecklist();
-  loadFromStorage();
-  updateSectionNav('t50');
+  loadFromStorage();           // renderGoals, renderSchedule, 등 모두 호출
   initStarRatings();
   setupScrollSpy();
   lucide.createIcons();
@@ -1364,11 +1447,8 @@ function switchTab(group, id) {
 // ─────────────────────────────────────
 // CALENDAR
 // ─────────────────────────────────────
-function getCalEvents() {
-  try { return JSON.parse(localStorage.getItem('cal_events_t50') || 'null') || JSON.parse(JSON.stringify(CAL_EVENTS)); }
-  catch { return JSON.parse(JSON.stringify(CAL_EVENTS)); }
-}
-function saveCalEventsData(evs) { localStorage.setItem('cal_events_t50', JSON.stringify(evs)); }
+function getCalEvents() { return dbGet('cal_events') || JSON.parse(JSON.stringify(CAL_EVENTS)); }
+function saveCalEventsData(evs) { dbSet('cal_events', evs); }
 
 function calNav(dir) {
   calMonth += dir;
@@ -1491,13 +1571,8 @@ function deleteCalEvent() {
 // ─────────────────────────────────────
 // CHECKLIST
 // ─────────────────────────────────────
-function loadChecklistState() {
-  try { return JSON.parse(localStorage.getItem('checklist_t50') || '{}'); } catch { return {}; }
-}
-
-function saveChecklistState(state) {
-  localStorage.setItem('checklist_t50', JSON.stringify(state));
-}
+function loadChecklistState() { return dbGet('checklist_state') || {}; }
+function saveChecklistState(state) { dbSet('checklist_state', state); }
 
 function renderChecklist() {
   const state = loadChecklistState();
@@ -1587,9 +1662,7 @@ function togglePhase(phaseId) {
 // ─────────────────────────────────────
 // RESOURCES
 // ─────────────────────────────────────
-function getResources() {
-  try { return JSON.parse(localStorage.getItem('resources_t50') || 'null') || getDefaultResources(); } catch { return getDefaultResources(); }
-}
+function getResources() { return dbGet('resources') || getDefaultResources(); }
 
 function getDefaultResources() {
   return [
@@ -1600,9 +1673,7 @@ function getDefaultResources() {
   ];
 }
 
-function saveResources(resources) {
-  localStorage.setItem('resources_t50', JSON.stringify(resources));
-}
+function saveResources(resources) { dbSet('resources', resources); }
 
 function renderResources() {
   const resources = getResources();
@@ -1654,13 +1725,8 @@ function removeResource(id) {
 // ─────────────────────────────────────
 // ATTENDEES
 // ─────────────────────────────────────
-function getAttendees() {
-  try { return JSON.parse(localStorage.getItem('attendees_t50') || '[]'); } catch { return []; }
-}
-
-function saveAttendees(atts) {
-  localStorage.setItem('attendees_t50', JSON.stringify(atts));
-}
+function getAttendees() { return dbGet('attendees') || []; }
+function saveAttendees(atts) { dbSet('attendees', atts); }
 
 function renderAttendees() {
   const atts = getAttendees();
@@ -1767,13 +1833,8 @@ function renderStars(key, val) {
   if (scoreEl) scoreEl.textContent = val ? val + '점' : '-점';
 }
 
-function getReview() {
-  try { return JSON.parse(localStorage.getItem('review_t50') || '{}'); } catch { return {}; }
-}
-
-function saveReviewData(data) {
-  localStorage.setItem('review_t50', JSON.stringify(data));
-}
+function getReview() { return dbGet('review') || {}; }
+function saveReviewData(data) { dbSet('review', data); }
 
 function saveReview() {
   const review = getReview();
@@ -1862,8 +1923,8 @@ const GOALS_DEFAULT = [
   { id:'g2', label:'Goal 02 · 일관성', text:'시공팀·컨택센터에서 고객 응대 시 <b>일관된 메시지를 전달</b>하고 만족할 수 있는 고객 경험을 만들어낼 수 있도록 한다.' },
   { id:'g3', label:'Goal 03 · 개선', text:'<b>상품기획 및 연구소</b>가 시공·컨택센터 교육을 통해 제품·서비스에서 개선할 부분을 파악하고 이를 업무에 적용한다.' }
 ];
-function getGoals() { try { return JSON.parse(localStorage.getItem('goals_t50')||'null') || JSON.parse(JSON.stringify(GOALS_DEFAULT)); } catch { return JSON.parse(JSON.stringify(GOALS_DEFAULT)); } }
-function saveGoalsData(g) { localStorage.setItem('goals_t50', JSON.stringify(g)); }
+function getGoals() { return dbGet('goals') || JSON.parse(JSON.stringify(GOALS_DEFAULT)); }
+function saveGoalsData(g) { dbSet('goals', g); }
 function renderGoals() {
   const goals = getGoals(), grid = document.getElementById('goalsGrid');
   if (!grid) return;
@@ -1906,8 +1967,8 @@ const SCHEDULE_DEFAULT = [
   {id:'s3',typeCls:'tg-pp',typeName:'AS 엔지니어',name:'AS엔지니어팀 교육',date:'2026년 9월 17일 (수)',time:'16:30 ~ 17:30',duration:'1h',location:'본사 7A',instructors:'이윤주 · 고태진 · 정규식 · 황인우',attendees:'AS엔지니어팀 6명 (권역장 1명 포함)'},
   {id:'s4',typeCls:'tg-bl',typeName:'컨택센터',name:'컨택센터 상담인원 교육',date:'2026년 9월 19일 (금)',time:'17:40 ~ 19:10',duration:'1.5h',location:'경기도 성남시 수정구 산성대로 223, 9층 ICS',instructors:'이윤주 · 고태진 · 정규식',attendees:'서비스 7명 · 구매상담 3명 (총 10명)'}
 ];
-function getSchedule() { try { return JSON.parse(localStorage.getItem('schedule_t50')||'null')||JSON.parse(JSON.stringify(SCHEDULE_DEFAULT)); } catch { return JSON.parse(JSON.stringify(SCHEDULE_DEFAULT)); } }
-function saveScheduleData(r) { localStorage.setItem('schedule_t50', JSON.stringify(r)); }
+function getSchedule() { return dbGet('schedule') || JSON.parse(JSON.stringify(SCHEDULE_DEFAULT)); }
+function saveScheduleData(r) { dbSet('schedule', r); }
 function renderSchedule() {
   const rows=getSchedule(), el=document.getElementById('scheduleContainer');
   if (!el) return;
@@ -1975,8 +2036,8 @@ const CURRICULUM_DEFAULT = {
     {id:'ca2',content:'AS 실습',detail:'AS 부위별 교체 방법 실습 (약 1시간 실습 필요)',duration:'60분',instructor:'고태진 · 정규식 · 황인우'}
   ]
 };
-function getCurriculum(){try{return JSON.parse(localStorage.getItem('curriculum_t50')||'null')||JSON.parse(JSON.stringify(CURRICULUM_DEFAULT));}catch{return JSON.parse(JSON.stringify(CURRICULUM_DEFAULT));}}
-function saveCurriculumData(d){localStorage.setItem('curriculum_t50',JSON.stringify(d));}
+function getCurriculum(){ return dbGet('curriculum') || JSON.parse(JSON.stringify(CURRICULUM_DEFAULT)); }
+function saveCurriculumData(d){ dbSet('curriculum', d); }
 function renderCurriculumTab(tab){
   const data=getCurriculum(),rows=data[tab]||[],el=document.getElementById('curr-'+tab+'-tbl');
   if(!el)return;
@@ -2066,8 +2127,8 @@ function saveAttendeeEdit(){
 // ─────────────────────────────────────
 // CHECKLIST ITEM EDIT
 // ─────────────────────────────────────
-function getChecklistMeta(){try{return JSON.parse(localStorage.getItem('checklist_meta_t50')||'{}');}catch{return {};}}
-function saveChecklistMeta(m){localStorage.setItem('checklist_meta_t50',JSON.stringify(m));}
+function getChecklistMeta(){ return dbGet('checklist_meta') || {}; }
+function saveChecklistMeta(m){ dbSet('checklist_meta', m); }
 function openEditChecklistItem(phaseId,itemId){
   editingChecklistItemId=itemId;
   const meta=getChecklistMeta(), phase=CHECKLIST.find(p=>p.id===phaseId), item=phase&&phase.items.find(i=>i.id===itemId);
