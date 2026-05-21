@@ -2206,13 +2206,20 @@ function renderSchedule() {
   if (!el) return;
   if (!rows.length) { el.innerHTML='<div class="empty-state">일정을 추가해주세요.</div>'; return; }
   const evs = getCalEvents();
-  const calIds = new Set(Object.values(evs).flat().filter(e=>e._schedId).map(e=>e._schedId));
+  // schedId → 실제 반영된 날짜 맵
+  const calIdDateMap = {};
+  Object.entries(evs).forEach(([dt, evList]) => evList.forEach(e => { if(e._schedId) calIdDateMap[e._schedId] = dt; }));
+  // 날짜까지 일치해야 반영됨
+  function isInCal(r) {
+    const dt = parseScheduleDate(r.date);
+    return dt && calIdDateMap[r.id] === dt;
+  }
   el.innerHTML=`<div class="tbl-wrap"><table>
     <thead><tr><th style="width:28px"></th><th>교육명</th><th>일정</th><th>시간</th><th>장소</th><th>교육 담당</th><th>대상/인원</th><th></th></tr></thead>
     <tbody>${rows.map((r,i)=>{
       const types = r.types || [{cls: r.typeCls||'tg-gy', name: r.typeName||'-'}];
       const tagsHTML = types.map(t=>`<span class="tag ${t.cls}">${t.name}</span>`).join(' ');
-      const inCal = calIds.has(r.id);
+      const inCal = isInCal(r);
       const calBtn = inCal
         ? `<button class="btn-icon" style="margin-right:3px;color:#22C55E;font-size:10px;padding:3px 6px;border:1px solid #BBF7D0;border-radius:4px;background:#F0FDF4;cursor:pointer;white-space:nowrap" onclick="syncOneSchedule('${r.id}')" title="캘린더 업데이트">✓ 반영됨</button>`
         : `<button class="btn-icon" style="margin-right:3px;font-size:10px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;white-space:nowrap;color:var(--muted)" onclick="syncOneSchedule('${r.id}')" title="캘린더에 올리기">📅 올리기</button>`;
