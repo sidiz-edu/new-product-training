@@ -251,6 +251,14 @@ input:focus,select:focus{border-color:var(--pri)}
 .goal-card:hover .goal-acts{opacity:1}
 .btn-icon{width:26px;height:26px;padding:0;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border:none;transition:all .15s;flex-shrink:0}
 .btn-icon svg{width:12px;height:12px;stroke:currentColor;stroke-width:2;fill:none;pointer-events:none}
+.chk-group{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.chk-item{display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;padding:4px 10px;border:1.5px solid var(--border);border-radius:6px;transition:all .15s;user-select:none}
+.chk-item:hover{border-color:var(--pri)}
+.chk-item input[type=checkbox]{accent-color:var(--pri);width:13px;height:13px;cursor:pointer}
+.drag-handle{cursor:grab;color:#CBD5E1;font-size:15px;padding:0 2px;user-select:none;display:inline-block}
+.drag-handle:hover{color:var(--muted)}
+.drag-handle:active{cursor:grabbing}
+tr.drag-over td{background:var(--pri-l)!important;outline:2px dashed var(--pri)}
 .btn-edit-ic{background:var(--pri-l);color:var(--pri)}.btn-edit-ic:hover{background:var(--pri);color:#fff}
 .btn-del-ic{background:#FEF2F2;color:var(--err)}.btn-del-ic:hover{background:var(--err);color:#fff}
 .cl-item-acts{display:flex;gap:4px;align-items:flex-start;padding-top:1px;flex-shrink:0;opacity:0;transition:opacity .15s}
@@ -1053,16 +1061,18 @@ create policy "Allow all" on app_data
   <div class="modal modal-wide" onclick="event.stopPropagation()">
     <div class="modal-ttl" id="sch-modal-ttl">일정 추가</div>
     <div class="form-row">
-      <div class="form-group" style="flex:0 0 140px">
-        <label class="form-label">교육 대상</label>
-        <select id="sch-type">
-          <option value="tg-yw|매장 직원">매장 직원</option>
-          <option value="tg-gn|시공팀">시공팀</option>
-          <option value="tg-pp|AS 엔지니어">AS 엔지니어</option>
-          <option value="tg-bl|컨택센터">컨택센터</option>
-          <option value="tg-pk|본사 사업부">본사 사업부</option>
-        </select>
+      <div class="form-group">
+        <label class="form-label">교육 대상 (복수 선택 가능)</label>
+        <div class="chk-group" id="sch-types">
+          <label class="chk-item"><input type="checkbox" value="tg-yw|매장 직원"> 매장 직원</label>
+          <label class="chk-item"><input type="checkbox" value="tg-gn|시공팀"> 시공팀</label>
+          <label class="chk-item"><input type="checkbox" value="tg-pp|AS 엔지니어"> AS 엔지니어</label>
+          <label class="chk-item"><input type="checkbox" value="tg-bl|컨택센터"> 컨택센터</label>
+          <label class="chk-item"><input type="checkbox" value="tg-pk|본사 사업부"> 본사 사업부</label>
+        </div>
       </div>
+    </div>
+    <div class="form-row">
       <div class="form-group">
         <label class="form-label">교육명</label>
         <input type="text" id="sch-name" placeholder="매장 인원 교육">
@@ -1968,21 +1978,32 @@ const SCHEDULE_DEFAULT = [
 ];
 function getSchedule() { return dbGet('schedule') || JSON.parse(JSON.stringify(SCHEDULE_DEFAULT)); }
 function saveScheduleData(r) { dbSet('schedule', r); }
+let _schedDragIdx = null;
+function schedDragStart(e, i) { _schedDragIdx = i; setTimeout(() => e.target.closest('tr').style.opacity = '.35', 0); e.dataTransfer.effectAllowed = 'move'; }
+function schedDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; document.querySelectorAll('#scheduleContainer tbody tr').forEach(r => r.classList.remove('drag-over')); e.target.closest('tr')?.classList.add('drag-over'); }
+function schedDrop(e, i) { e.preventDefault(); if (_schedDragIdx === i || _schedDragIdx === null) return; const rows = getSchedule(); const [m] = rows.splice(_schedDragIdx, 1); rows.splice(i, 0, m); saveScheduleData(rows); renderSchedule(); }
+function schedDragEnd(e) { document.querySelectorAll('#scheduleContainer tbody tr').forEach(r => { r.style.opacity = '1'; r.classList.remove('drag-over'); }); _schedDragIdx = null; }
+
 function renderSchedule() {
   const rows=getSchedule(), el=document.getElementById('scheduleContainer');
   if (!el) return;
   if (!rows.length) { el.innerHTML='<div class="empty-state">일정을 추가해주세요.</div>'; return; }
   el.innerHTML=`<div class="tbl-wrap"><table>
-    <thead><tr><th>교육명</th><th>일정</th><th>시간</th><th>장소</th><th>교육 담당</th><th>대상/인원</th><th></th></tr></thead>
-    <tbody>${rows.map(r=>`<tr>
-      <td><span class="tag ${r.typeCls}">${r.typeName}</span><br><b style="display:block;margin-top:4px">${r.name}</b></td>
-      <td>${r.date}</td>
-      <td>${r.time}<br><span class="text-muted text-sm">${r.duration}</span></td>
-      <td>${r.location}</td><td>${r.instructors}</td><td>${r.attendees}</td>
-      <td style="white-space:nowrap;padding:8px">
-        <button class="btn-icon btn-edit-ic" style="margin-right:3px" onclick="openEditSchedule('${r.id}')" title="수정"><i data-lucide="pencil"></i></button>
-        <button class="btn-icon btn-del-ic" onclick="removeScheduleRow('${r.id}')" title="삭제"><i data-lucide="trash-2"></i></button>
-      </td></tr>`).join('')}
+    <thead><tr><th style="width:28px"></th><th>교육명</th><th>일정</th><th>시간</th><th>장소</th><th>교육 담당</th><th>대상/인원</th><th></th></tr></thead>
+    <tbody>${rows.map((r,i)=>{
+      const types = r.types || [{cls: r.typeCls||'tg-gy', name: r.typeName||'-'}];
+      const tagsHTML = types.map(t=>`<span class="tag ${t.cls}">${t.name}</span>`).join(' ');
+      return `<tr draggable="true" ondragstart="schedDragStart(event,${i})" ondragover="schedDragOver(event)" ondrop="schedDrop(event,${i})" ondragend="schedDragEnd(event)" style="cursor:default">
+        <td style="padding:8px 4px;text-align:center"><span class="drag-handle" title="드래그로 순서 변경">⠿</span></td>
+        <td>${tagsHTML}<br><b style="display:block;margin-top:4px">${r.name}</b></td>
+        <td>${r.date}</td>
+        <td>${r.time}<br><span class="text-muted text-sm">${r.duration}</span></td>
+        <td>${r.location}</td><td>${r.instructors}</td><td>${r.attendees}</td>
+        <td style="white-space:nowrap;padding:8px">
+          <button class="btn-icon btn-edit-ic" style="margin-right:3px" onclick="openEditSchedule('${r.id}')" title="수정"><i data-lucide="pencil"></i></button>
+          <button class="btn-icon btn-del-ic" onclick="removeScheduleRow('${r.id}')" title="삭제"><i data-lucide="trash-2"></i></button>
+        </td></tr>`;
+    }).join('')}
     </tbody></table></div>`;
   lucide.createIcons();
 }
@@ -1990,20 +2011,30 @@ function openEditSchedule(id) {
   editingScheduleId=id;
   document.getElementById('sch-modal-ttl').textContent=id?'일정 수정':'일정 추가';
   document.getElementById('sch-save-btn').textContent=id?'저장':'추가';
-  if (id) { const r=getSchedule().find(x=>x.id===id)||{};
-    document.getElementById('sch-type').value=(r.typeCls||'tg-yw')+'|'+(r.typeName||'');
+  // 체크박스 초기화
+  document.querySelectorAll('#sch-types input[type=checkbox]').forEach(cb=>cb.checked=false);
+  if (id) {
+    const r=getSchedule().find(x=>x.id===id)||{};
+    const types = r.types || (r.typeCls ? [{cls:r.typeCls, name:r.typeName}] : []);
+    types.forEach(t=>{
+      const cb=document.querySelector(`#sch-types input[value="${t.cls}|${t.name}"]`);
+      if(cb) cb.checked=true;
+    });
     ['name','date','time','duration','location','instructors','attendees'].forEach(k=>document.getElementById('sch-'+k).value=r[k]||'');
   } else { ['name','date','time','duration','location','instructors','attendees'].forEach(k=>document.getElementById('sch-'+k).value=''); }
   openModal('modal-add-schedule');
 }
 function saveScheduleEdit() {
-  const tv=document.getElementById('sch-type').value.split('|'), name=document.getElementById('sch-name').value.trim();
-  if (!name){alert('교육명을 입력해주세요.');return;}
-  const row={typeCls:tv[0],typeName:tv[1],name,date:document.getElementById('sch-date').value.trim(),time:document.getElementById('sch-time').value.trim(),duration:document.getElementById('sch-duration').value.trim(),location:document.getElementById('sch-location').value.trim(),instructors:document.getElementById('sch-instructors').value.trim(),attendees:document.getElementById('sch-attendees').value.trim()};
+  const checked=[...document.querySelectorAll('#sch-types input[type=checkbox]:checked')];
+  if(!checked.length){alert('교육 대상을 최소 1개 선택해주세요.');return;}
+  const types=checked.map(cb=>{const[cls,...np]=cb.value.split('|');return{cls,name:np.join('|')};});
+  const name=document.getElementById('sch-name').value.trim();
+  if(!name){alert('교육명을 입력해주세요.');return;}
+  const row={types,typeCls:types[0].cls,typeName:types[0].name,name,date:document.getElementById('sch-date').value.trim(),time:document.getElementById('sch-time').value.trim(),duration:document.getElementById('sch-duration').value.trim(),location:document.getElementById('sch-location').value.trim(),instructors:document.getElementById('sch-instructors').value.trim(),attendees:document.getElementById('sch-attendees').value.trim()};
   const rows=getSchedule();
   if(editingScheduleId){const i=rows.findIndex(r=>r.id===editingScheduleId);if(i>-1)rows[i]={...rows[i],...row};}
   else rows.push({id:'s'+Date.now(),...row});
-  saveScheduleData(rows); renderSchedule(); closeModal('modal-add-schedule');
+  saveScheduleData(rows);renderSchedule();closeModal('modal-add-schedule');
 }
 function removeScheduleRow(id){if(!confirm('일정을 삭제하시겠습니까?'))return;saveScheduleData(getSchedule().filter(r=>r.id!==id));renderSchedule();}
 
