@@ -2191,7 +2191,7 @@ const SCHEDULE_DEFAULT = [
   {id:'s1',typeCls:'tg-yw',typeName:'매장 직원',name:'매장 인원 교육',date:'2026년 5월 26일 (화)',time:'14:00 ~ 16:00',duration:'2h',location:'본사 311홀',instructors:'이윤주 · 서지원 · 권소현',attendees:'취합 중'},
   {id:'s2',typeCls:'tg-gn',typeName:'시공팀',name:'시공팀 교육',date:'2026년 5월 26일 (화)',time:'05:30 ~ 06:30',duration:'1h',location:'퍼시스 안성공장 본관 3층 교육실',instructors:'이윤주 · 고태진 · 정규식 · 황인우 · 백광열',attendees:'시공팀 35명 (권역장 3명 포함)'},
   {id:'s3',typeCls:'tg-pp',typeName:'AS 엔지니어',name:'AS엔지니어팀 교육',date:'2026년 9월 17일 (수)',time:'16:30 ~ 17:30',duration:'1h',location:'본사 7A',instructors:'이윤주 · 고태진 · 정규식 · 황인우',attendees:'AS엔지니어팀 6명 (권역장 1명 포함)'},
-  {id:'s4',typeCls:'tg-bl',typeName:'컨택센터',name:'컨택센터 상담인원 교육',date:'2026년 9월 19일 (금)',time:'17:40 ~ 19:10',duration:'1.5h',location:'경기도 성남시 수정구 산성대로 223, 9층 ICS',instructors:'이윤주 · 고태진 · 정규식',attendees:'서비스 7명 · 구매상담 3명 (총 10명)'}
+  {id:'s4',typeCls:'tg-bl',typeName:'컨택센터',name:'컨택센터 상담인원 교육',date:'2026년 9월 18일 (금)',time:'17:40 ~ 19:10',duration:'1.5h',location:'경기도 성남시 수정구 산성대로 223, 9층 ICS',instructors:'이윤주 · 고태진 · 정규식',attendees:'서비스 7명 · 구매상담 3명 (총 10명)'}
 ];
 function getSchedule() { return dbGet('schedule') || JSON.parse(JSON.stringify(SCHEDULE_DEFAULT)); }
 function saveScheduleData(r) { dbSet('schedule', r); }
@@ -2221,8 +2221,8 @@ function renderSchedule() {
       const tagsHTML = types.map(t=>`<span class="tag ${t.cls}">${t.name}</span>`).join(' ');
       const inCal = isInCal(r);
       const calBtn = inCal
-        ? `<button onclick="syncOneSchedule('${r.id}')" title="캘린더 업데이트" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;border:none;background:linear-gradient(135deg,#22C55E,#16A34A);color:#fff;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 1px 4px rgba(34,197,94,.3)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>반영됨</button>`
-        : `<button onclick="syncOneSchedule('${r.id}')" title="캘린더에 올리기" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;border:1px solid #C7D2FE;background:#EEF2FF;color:#4F46E5;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">📅 올리기</button>`;
+        ? `<button onclick="syncOneSchedule('${r.id}')" title="캘린더에 반영됨 (클릭 시 업데이트)" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;border:1px solid #BBF7D0;background:#F0FDF4;color:#16A34A;cursor:pointer"><i data-lucide="calendar-check" style="width:14px;height:14px"></i></button>`
+        : `<button onclick="syncOneSchedule('${r.id}')" title="캘린더에 올리기" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;border:1px solid #C7D2FE;background:#EEF2FF;color:#4F46E5;cursor:pointer"><i data-lucide="calendar-arrow-up" style="width:14px;height:14px"></i></button>`;
       return `<tr draggable="true" ondragstart="schedDragStart(event,${i})" ondragover="schedDragOver(event)" ondrop="schedDrop(event,${i})" ondragend="schedDragEnd(event)" style="cursor:default">
         <td style="padding:8px 4px;text-align:center"><span class="drag-handle" title="드래그로 순서 변경">⠿</span></td>
         <td>${tagsHTML}<br><b style="display:block;margin-top:4px">${r.name}</b></td>
@@ -2277,7 +2277,12 @@ function syncOneSchedule(id) {
   const row = rows.find(r => r.id === id);
   if (!row) return;
   const dt = parseScheduleDate(row.date);
-  if (!dt) { alert('날짜 형식을 확인해주세요.\n예: 2026년 5월 26일 (화)'); return; }
+  if (!dt) { alert('날짜를 먼저 입력해주세요.'); return; }
+  const dow = new Date(dt + 'T00:00:00').getDay();
+  if (dow === 0 || dow === 6) {
+    alert(`${row.date}\n\n이 날짜는 주말이라 캘린더에 표시되지 않아요.\n일정 수정에서 평일로 변경해주세요.`);
+    return;
+  }
   const evs = getCalEvents();
   // 이 항목 기존 캘린더 이벤트 제거
   Object.keys(evs).forEach(k => { evs[k] = evs[k].filter(e => e._schedId !== id); });
