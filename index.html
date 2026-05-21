@@ -1128,7 +1128,7 @@ create policy "Allow all" on app_data
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">일정</label>
-        <input type="text" id="sch-date" placeholder="2026년 5월 26일 (화)">
+        <input type="date" id="sch-date" style="font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;color:var(--text);background:var(--card)">
       </div>
       <div class="form-group" style="flex:0 0 110px">
         <label class="form-label">시간</label>
@@ -2251,8 +2251,9 @@ function openEditSchedule(id) {
       const cb=document.querySelector(`#sch-types input[value="${t.cls}|${t.name}"]`);
       if(cb) cb.checked=true;
     });
-    ['name','date','time','duration','location','instructors','attendees'].forEach(k=>document.getElementById('sch-'+k).value=r[k]||'');
-  } else { ['name','date','time','duration','location','instructors','attendees'].forEach(k=>document.getElementById('sch-'+k).value=''); }
+    ['name','time','duration','location','instructors','attendees'].forEach(k=>document.getElementById('sch-'+k).value=r[k]||'');
+    document.getElementById('sch-date').value = parseScheduleDate(r.date||'') || '';
+  } else { ['name','time','duration','location','instructors','attendees'].forEach(k=>document.getElementById('sch-'+k).value=''); document.getElementById('sch-date').value=''; }
   openModal('modal-add-schedule');
 }
 function saveScheduleEdit() {
@@ -2261,7 +2262,9 @@ function saveScheduleEdit() {
   const types=checked.map(cb=>{const[cls,...np]=cb.value.split('|');return{cls,name:np.join('|')};});
   const name=document.getElementById('sch-name').value.trim();
   if(!name){alert('교육명을 입력해주세요.');return;}
-  const row={types,typeCls:types[0].cls,typeName:types[0].name,name,date:document.getElementById('sch-date').value.trim(),time:document.getElementById('sch-time').value.trim(),duration:document.getElementById('sch-duration').value.trim(),location:document.getElementById('sch-location').value.trim(),instructors:document.getElementById('sch-instructors').value.trim(),attendees:document.getElementById('sch-attendees').value.trim()};
+  const dateVal = document.getElementById('sch-date').value;
+  const dateKo = dateVal ? formatDateToKorean(dateVal) : '';
+  const row={types,typeCls:types[0].cls,typeName:types[0].name,name,date:dateKo,time:document.getElementById('sch-time').value.trim(),duration:document.getElementById('sch-duration').value.trim(),location:document.getElementById('sch-location').value.trim(),instructors:document.getElementById('sch-instructors').value.trim(),attendees:document.getElementById('sch-attendees').value.trim()};
   const rows=getSchedule();
   if(editingScheduleId){const i=rows.findIndex(r=>r.id===editingScheduleId);if(i>-1)rows[i]={...rows[i],...row};}
   else rows.push({id:'s'+Date.now(),...row});
