@@ -1185,10 +1185,6 @@ create policy "Allow all" on app_data
         <label class="form-label">소요 시간</label>
         <input type="text" id="cur-duration" placeholder="15분">
       </div>
-      <div class="form-group">
-        <label class="form-label">강사</label>
-        <input type="text" id="cur-instructor" placeholder="이윤주 · 고태진">
-      </div>
     </div>
     <div class="form-row" id="cur-material-row">
       <div class="form-group">
@@ -2337,10 +2333,10 @@ function renderCurriculumTab(tab){
   if(!el)return;
   const isCm=tab==='common';
   el.innerHTML=`<div class="tbl-wrap"><table>
-    <thead><tr><th>내용</th><th>상세 내용</th><th>소요 시간</th>${isCm?'<th>자료</th>':''}<th>강사</th><th></th></tr></thead>
+    <thead><tr><th>내용</th><th>상세 내용</th><th>소요 시간</th>${isCm?'<th>자료</th>':''}<th></th></tr></thead>
     <tbody>${rows.map(r=>`<tr>
       <td><b>${r.content}</b></td><td>${r.detail}</td><td>${r.duration}</td>${isCm?`<td>${r.material||'-'}</td>`:''}
-      <td>${r.instructor}</td>
+
       <td style="white-space:nowrap;padding:8px">
         <button class="btn-icon btn-edit-ic" style="margin-right:3px" onclick="openEditCurriculum('${tab}','${r.id}')" title="수정"><i data-lucide="pencil"></i></button>
         <button class="btn-icon btn-del-ic" onclick="removeCurriculumRow('${tab}','${r.id}')" title="삭제"><i data-lucide="trash-2"></i></button>
@@ -2358,15 +2354,14 @@ function openEditCurriculum(tab,id){
     document.getElementById('cur-content').value=r.content||'';
     document.getElementById('cur-detail').value=r.detail||'';
     document.getElementById('cur-duration').value=r.duration||'';
-    document.getElementById('cur-instructor').value=r.instructor||'';
     document.getElementById('cur-material').value=r.material||'';
-  } else {['cur-content','cur-detail','cur-duration','cur-instructor','cur-material'].forEach(x=>document.getElementById(x).value='');}
+  } else {['cur-content','cur-detail','cur-duration','cur-material'].forEach(x=>document.getElementById(x).value='');}
   openModal('modal-add-curriculum');
 }
 function saveCurriculumEdit(){
   const content=document.getElementById('cur-content').value.trim();
   if(!content){alert('내용을 입력해주세요.');return;}
-  const row={content,detail:document.getElementById('cur-detail').value.trim(),duration:document.getElementById('cur-duration').value.trim(),instructor:document.getElementById('cur-instructor').value.trim(),material:document.getElementById('cur-material').value.trim()};
+  const row={content,detail:document.getElementById('cur-detail').value.trim(),duration:document.getElementById('cur-duration').value.trim(),material:document.getElementById('cur-material').value.trim()};
   const data=getCurriculum();
   if(!data[editingCurriculumTab])data[editingCurriculumTab]=[];
   if(editingCurriculumId){const i=data[editingCurriculumTab].findIndex(r=>r.id===editingCurriculumId);if(i>-1)data[editingCurriculumTab][i]={...data[editingCurriculumTab][i],...row};}
