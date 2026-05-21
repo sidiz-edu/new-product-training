@@ -666,8 +666,9 @@ create policy "Allow all" on app_data
       <h2 class="sec-ttl">교육 목표</h2>
     </div>
     <div id="goalsGrid" class="goal-grid"></div>
-    <div class="mt-3">
+    <div class="mt-3" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <button class="btn btn-pri btn-sm" onclick="openEditGoal(null)">+ 목표 추가</button>
+      <div id="keyPersonsCard"></div>
     </div>
   </section>
 
@@ -1029,6 +1030,29 @@ create policy "Allow all" on app_data
       <button class="btn btn-ghost" onclick="closeModal('modal-cal-event')">취소</button>
       <button class="btn btn-err btn-sm" id="cal-delete-btn" onclick="deleteCalEvent()" style="display:none">삭제</button>
       <button class="btn btn-pri" onclick="saveCalEvent()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: 담당자 수정 ── -->
+<div class="modal-ov" id="modal-key-persons" onclick="handleModalClick(event,'modal-key-persons')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-ttl">담당자 수정</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">상품기획 담당자</label>
+        <input type="text" id="kp-planning" placeholder="예: 이윤주">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">연구소 담당자</label>
+        <input type="text" id="kp-research" placeholder="예: 고태진 · 정규식">
+      </div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-ghost" onclick="closeModal('modal-key-persons')">취소</button>
+      <button class="btn btn-pri" onclick="saveKeyPersons()">저장</button>
     </div>
   </div>
 </div>
@@ -1911,6 +1935,7 @@ function addProduct() {
 // ─────────────────────────────────────
 function loadFromStorage() {
   renderGoals();
+  renderKeyPersons();
   renderSchedule();
   renderAllCurriculumTabs();
   renderResources();
@@ -1932,6 +1957,54 @@ const GOALS_DEFAULT = [
   { id:'g2', label:'Goal 02 · 일관성', text:'시공팀·컨택센터에서 고객 응대 시 <b>일관된 메시지를 전달</b>하고 만족할 수 있는 고객 경험을 만들어낼 수 있도록 한다.' },
   { id:'g3', label:'Goal 03 · 개선', text:'<b>상품기획 및 연구소</b>가 시공·컨택센터 교육을 통해 제품·서비스에서 개선할 부분을 파악하고 이를 업무에 적용한다.' }
 ];
+// ─────────────────────────────────────
+// KEY PERSONS
+// ─────────────────────────────────────
+function getKeyPersons() { return dbGet('key_persons') || { planning: '', research: '' }; }
+function saveKeyPersonsData(d) { dbSet('key_persons', d); }
+
+function renderKeyPersons() {
+  const el = document.getElementById('keyPersonsCard');
+  if (!el) return;
+  const kp = getKeyPersons();
+  const hasData = kp.planning || kp.research;
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:12px;flex:1;flex-wrap:wrap;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap">상품기획</span>
+          <span style="font-size:13px;font-weight:500;color:${kp.planning ? 'var(--text)' : 'var(--muted)'}">${kp.planning || '미입력'}</span>
+        </div>
+        <div style="width:1px;height:16px;background:var(--border)"></div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap">연구소</span>
+          <span style="font-size:13px;font-weight:500;color:${kp.research ? 'var(--text)' : 'var(--muted)'}">${kp.research || '미입력'}</span>
+        </div>
+      </div>
+      <button class="btn-icon btn-edit-ic" onclick="openEditKeyPersons()" title="담당자 수정"><i data-lucide="pencil"></i></button>
+    </div>`;
+  lucide.createIcons();
+}
+
+function openEditKeyPersons() {
+  const kp = getKeyPersons();
+  document.getElementById('kp-planning').value = kp.planning || '';
+  document.getElementById('kp-research').value = kp.research || '';
+  openModal('modal-key-persons');
+}
+
+function saveKeyPersons() {
+  saveKeyPersonsData({
+    planning: document.getElementById('kp-planning').value.trim(),
+    research: document.getElementById('kp-research').value.trim()
+  });
+  renderKeyPersons();
+  closeModal('modal-key-persons');
+}
+
+// ─────────────────────────────────────
+// GOALS
+// ─────────────────────────────────────
 function getGoals() { return dbGet('goals') || JSON.parse(JSON.stringify(GOALS_DEFAULT)); }
 function saveGoalsData(g) { dbSet('goals', g); }
 function renderGoals() {
