@@ -843,27 +843,53 @@ create policy "Allow all" on app_data
   <!-- 6. 참석자 명단 -->
   <section class="section" id="t50-attendees">
     <div class="sec-hd"><div class="sec-ico"><i data-lucide="users"></i></div><h2 class="sec-ttl">참석자 명단</h2></div>
-    <div class="att-sum" id="attendeeSummary">
-      <div class="att-sc"><div class="att-num" id="totalCount">0</div><div class="att-lbl">총 참석자</div></div>
-      <div class="att-sc"><div class="att-num" id="onsiteCount">0</div><div class="att-lbl">현장 참석</div></div>
-      <div class="att-sc"><div class="att-num" id="onlineCount">0</div><div class="att-lbl">화상회의 참석</div></div>
-    </div>
+
     <div class="tbl-wrap">
-      <table id="attendeeTable">
+      <table>
         <thead>
-          <tr><th>#</th><th>이름</th><th>매장/소속</th><th>휴대폰 번호</th><th>참석 방법</th><th>교육 대상</th><th>-</th></tr>
+          <tr><th>교육 대상</th><th>현장 참석</th><th>화상회의 참석</th><th>합계</th></tr>
         </thead>
-        <tbody id="attendeeBody"></tbody>
+        <tbody>
+          <tr>
+            <td><b>매장 직원</b></td>
+            <td><input type="number" id="att-store-onsite" min="0" placeholder="0" style="width:80px" oninput="saveAttendeeCount()"></td>
+            <td><input type="number" id="att-store-online" min="0" placeholder="0" style="width:80px" oninput="saveAttendeeCount()"></td>
+            <td id="att-store-total" style="font-weight:600">0</td>
+          </tr>
+          <tr>
+            <td><b>시공팀</b></td>
+            <td><input type="number" id="att-install-onsite" min="0" placeholder="0" style="width:80px" oninput="saveAttendeeCount()"></td>
+            <td style="color:var(--muted);font-size:12px">-</td>
+            <td id="att-install-total" style="font-weight:600">0</td>
+          </tr>
+          <tr>
+            <td><b>컨택센터</b></td>
+            <td><input type="number" id="att-contact-onsite" min="0" placeholder="0" style="width:80px" oninput="saveAttendeeCount()"></td>
+            <td style="color:var(--muted);font-size:12px">-</td>
+            <td id="att-contact-total" style="font-weight:600">0</td>
+          </tr>
+          <tr>
+            <td><b>AS 엔지니어팀</b></td>
+            <td><input type="number" id="att-as-onsite" min="0" placeholder="0" style="width:80px" oninput="saveAttendeeCount()"></td>
+            <td style="color:var(--muted);font-size:12px">-</td>
+            <td id="att-as-total" style="font-weight:600">0</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr style="background:var(--bg)">
+            <td style="font-weight:700">합계</td>
+            <td id="att-sum-onsite" style="font-weight:700">0</td>
+            <td id="att-sum-online" style="font-weight:700">0</td>
+            <td id="att-sum-total" style="font-weight:700;color:var(--pri)">0</td>
+          </tr>
+        </tfoot>
       </table>
-    </div>
-    <div class="mt-3">
-      <button class="btn btn-pri btn-sm" onclick="openEditAttendee(null)">+ 참석자 추가</button>
     </div>
   </section>
 
   <!-- 병렬 프로세스 -->
   <section class="section" id="t50-parallel">
-    <div class="sec-hd"><div class="sec-ico"><i data-lucide="git-branch"></i></div><h2 class="sec-ttl">병렬 프로세스</h2><span class="sec-badge">BPR 개선안</span></div>
+    <div class="sec-hd"><div class="sec-ico"><i data-lucide="git-branch"></i></div><h2 class="sec-ttl">프로세스 맵</h2></div>
     <div class="info-box">같은 5주, 역할별로 동시에 진행하여 후반부 과부하를 분산합니다.</div>
 
     <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:8px;margin-bottom:8px">
@@ -1511,7 +1537,7 @@ const SECTION_CONFIGS = {
     { id: 't50-curriculum', label: '커리큘럼' },
     { id: 't50-resources',  label: '자료실' },
     { id: 't50-attendees',  label: '참석자 명단' },
-    { id: 't50-parallel',   label: '병렬 프로세스' },
+    { id: 't50-parallel',   label: '프로세스 맵' },
     { id: 't50-checklist',  label: '체크리스트' },
     { id: 't50-review',     label: '결과 리뷰' }
   ]
@@ -1874,6 +1900,7 @@ function renderChecklist() {
         </div>
         <div class="cl-item-acts">
           <button class="btn-icon btn-edit-ic" onclick="openEditChecklistItem('${phase.id}','${item.id}')" title="수정"><i data-lucide="pencil"></i></button>
+          <button class="btn-icon btn-del-ic" onclick="deleteChecklistItem('${phase.id}','${item.id}')" title="삭제"><i data-lucide="trash-2"></i></button>
         </div>
       </div>
     `).join('');
@@ -1998,63 +2025,50 @@ function removeResource(id) {
 // ─────────────────────────────────────
 // ATTENDEES
 // ─────────────────────────────────────
-function getAttendees() { return dbGet('attendees') || []; }
-function saveAttendees(atts) { dbSet('attendees', atts); }
+function getAttendeeCounts() { return dbGet('attendee_counts') || {}; }
+function saveAttendeeCounts(d) { dbSet('attendee_counts', d); }
 
-function renderAttendees() {
-  const atts = getAttendees();
-  const tbody = document.getElementById('attendeeBody');
-  if (atts.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">참석자를 추가해주세요.</td></tr>';
-  } else {
-    const targetColors = { '매장':'tg-yw','시공팀':'tg-gn','컨택센터':'tg-bl','AS엔지니어':'tg-pp','본사':'tg-pk' };
-    tbody.innerHTML = atts.map((a, i) => `
-      <tr>
-        <td class="text-muted">${i + 1}</td>
-        <td><b>${a.name}</b></td>
-        <td>${a.store || '-'}</td>
-        <td>${a.phone || '-'}</td>
-        <td><span class="tag ${a.type === '현장' ? 'tg-gn' : 'tg-bl'}">${a.type}</span></td>
-        <td><span class="tag ${targetColors[a.target] || 'tg-gy'}">${a.target}</span></td>
-        <td style="white-space:nowrap">
-          <button class="btn-icon btn-edit-ic" style="margin-right:3px" onclick="openEditAttendee('${a.id}')" title="수정"><i data-lucide="pencil"></i></button>
-          <button class="btn-icon btn-del-ic" onclick="removeAttendee('${a.id}')" title="삭제"><i data-lucide="trash-2"></i></button>
-        </td>
-      </tr>
-    `).join('');
-  }
-  updateAttendeeSummary(atts);
-  lucide.createIcons();
+function saveAttendeeCount() {
+  const d = {
+    storeOnsite:   parseInt(document.getElementById('att-store-onsite')?.value) || 0,
+    storeOnline:   parseInt(document.getElementById('att-store-online')?.value) || 0,
+    installOnsite: parseInt(document.getElementById('att-install-onsite')?.value) || 0,
+    contactOnsite: parseInt(document.getElementById('att-contact-onsite')?.value) || 0,
+    asOnsite:      parseInt(document.getElementById('att-as-onsite')?.value) || 0,
+  };
+  saveAttendeeCounts(d);
+  renderAttendeeSummary(d);
 }
 
-function updateAttendeeSummary(atts) {
-  document.getElementById('totalCount').textContent = atts.length;
-  document.getElementById('onsiteCount').textContent = atts.filter(a => a.type === '현장').length;
-  document.getElementById('onlineCount').textContent = atts.filter(a => a.type === '화상').length;
+function renderAttendeeSummary(d) {
+  if (!d) d = getAttendeeCounts();
+  const storeTotal   = d.storeOnsite + d.storeOnline;
+  const installTotal = d.installOnsite;
+  const contactTotal = d.contactOnsite;
+  const asTotal      = d.asOnsite;
+  const sumOnsite    = d.storeOnsite + d.installOnsite + d.contactOnsite + d.asOnsite;
+  const sumOnline    = d.storeOnline;
+  const sumTotal     = storeTotal + installTotal + contactTotal + asTotal;
+
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('att-store-total',   storeTotal);
+  set('att-install-total', installTotal);
+  set('att-contact-total', contactTotal);
+  set('att-as-total',      asTotal);
+  set('att-sum-onsite',    sumOnsite);
+  set('att-sum-online',    sumOnline);
+  set('att-sum-total',     sumTotal);
 }
 
-function addAttendee() {
-  const name = document.getElementById('att-name').value.trim();
-  if (!name) { alert('이름을 입력해주세요.'); return; }
-  const atts = getAttendees();
-  atts.push({
-    id: 'a' + Date.now(),
-    name,
-    store: document.getElementById('att-store').value.trim(),
-    phone: document.getElementById('att-phone').value.trim(),
-    type: document.getElementById('att-type').value,
-    target: document.getElementById('att-target').value
-  });
-  saveAttendees(atts);
-  renderAttendees();
-  closeModal('modal-add-attendee');
-  ['att-name','att-store','att-phone'].forEach(id => document.getElementById(id).value = '');
-}
-
-function removeAttendee(id) {
-  if (!confirm('참석자를 삭제하시겠습니까?')) return;
-  saveAttendees(getAttendees().filter(a => a.id !== id));
-  renderAttendees();
+function loadAttendeeCounts() {
+  const d = getAttendeeCounts();
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  setVal('att-store-onsite',   d.storeOnsite);
+  setVal('att-store-online',   d.storeOnline);
+  setVal('att-install-onsite', d.installOnsite);
+  setVal('att-contact-onsite', d.contactOnsite);
+  setVal('att-as-onsite',      d.asOnsite);
+  renderAttendeeSummary(d);
 }
 
 // ─────────────────────────────────────
@@ -2179,7 +2193,7 @@ function loadFromStorage() {
   renderSchedule();
   renderAllCurriculumTabs();
   renderResources();
-  renderAttendees();
+  loadAttendeeCounts();
   loadReview();
 }
 
@@ -2532,6 +2546,17 @@ function openEditChecklistItem(phaseId,itemId){
   document.getElementById('cli-note').value=ov.note!==undefined?ov.note:(item.note||'');
   openModal('modal-edit-checklist');
 }
+function deleteChecklistItem(phaseId, itemId){
+  if(!confirm('항목을 삭제하시겠습니까?')) return;
+  const phase = CHECKLIST.find(p => p.id === phaseId);
+  if(!phase) return;
+  phase.items = phase.items.filter(i => i.id !== itemId);
+  // 상태·메타에서도 제거
+  const state = loadChecklistState(); delete state[itemId]; saveChecklistState(state);
+  const meta = getChecklistMeta(); delete meta[itemId]; saveChecklistMeta(meta);
+  renderChecklist();
+}
+
 function saveChecklistItemEdit(){
   const text=document.getElementById('cli-text').value.trim();
   if(!text){alert('항목 내용을 입력해주세요.');return;}
