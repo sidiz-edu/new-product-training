@@ -1886,7 +1886,12 @@ function renderChecklist() {
             <span>${pct}%</span>
           </div>
         </div>
-        <div class="cl-items" id="pitems-${phase.id}">${itemsHTML}</div>
+        <div class="cl-items" id="pitems-${phase.id}">
+          ${itemsHTML}
+          <div class="cl-item" style="background:var(--bg)">
+            <button class="btn btn-ghost btn-sm" onclick="openAddChecklistItem('${phase.id}')" style="width:100%;justify-content:center;color:var(--muted)">+ 항목 추가</button>
+          </div>
+        </div>
       </div>
     `;
   }).join('');
@@ -2543,6 +2548,16 @@ function openEditChecklistItem(phaseId,itemId){
   document.getElementById('cli-note').value=ov.note!==undefined?ov.note:(item.note||'');
   openModal('modal-edit-checklist');
 }
+function openAddChecklistItem(phaseId) {
+  editingChecklistItemId = '__new__' + phaseId;
+  document.getElementById('cli-text').value = '';
+  document.getElementById('cli-owner').value = '';
+  document.getElementById('cli-timing').value = '';
+  document.getElementById('cli-note').value = '';
+  openModal('modal-edit-checklist');
+  document.querySelector('#modal-edit-checklist .modal-ttl').textContent = '항목 추가';
+}
+
 function deleteChecklistItem(phaseId, itemId){
   if(!confirm('항목을 삭제하시겠습니까?')) return;
   const phase = CHECKLIST.find(p => p.id === phaseId);
@@ -2557,9 +2572,24 @@ function deleteChecklistItem(phaseId, itemId){
 function saveChecklistItemEdit(){
   const text=document.getElementById('cli-text').value.trim();
   if(!text){alert('항목 내용을 입력해주세요.');return;}
-  const meta=getChecklistMeta();
-  meta[editingChecklistItemId]={text,owner:document.getElementById('cli-owner').value.trim(),timing:document.getElementById('cli-timing').value.trim(),note:document.getElementById('cli-note').value.trim()};
-  saveChecklistMeta(meta);renderChecklist();closeModal('modal-edit-checklist');
+  const owner=document.getElementById('cli-owner').value.trim();
+  const timing=document.getElementById('cli-timing').value.trim();
+  const note=document.getElementById('cli-note').value.trim();
+
+  if(editingChecklistItemId && editingChecklistItemId.startsWith('__new__')){
+    const phaseId = editingChecklistItemId.replace('__new__','');
+    const phase = CHECKLIST.find(p=>p.id===phaseId);
+    if(phase){
+      const newId = phaseId + '_' + Date.now();
+      phase.items.push({id:newId, text, owner, timing, note, done:false});
+    }
+  } else {
+    const meta=getChecklistMeta();
+    meta[editingChecklistItemId]={text,owner,timing,note};
+    saveChecklistMeta(meta);
+  }
+  renderChecklist();closeModal('modal-edit-checklist');
+  document.querySelector('#modal-edit-checklist .modal-ttl').textContent = '체크리스트 항목 수정';
 }
 </script>
 </body>
